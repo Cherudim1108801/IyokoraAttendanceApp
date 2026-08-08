@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="IyokoraAttendanceApp.Views.ProfilePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:IyokoraAttendanceApp.ViewModels"
+    x:DataType="vm:ProfileViewModel"
+    Title="プロフィール">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label Text="名前" FontAttributes="Bold" />
+            <Entry Text="{Binding Name}" Placeholder="例：山田 太郎" />
+
+            <Label Text="パート" FontAttributes="Bold" />
+            <Picker
+                ItemsSource="{Binding PartOptions}"
+                ItemDisplayBinding="{Binding Label}"
+                SelectedItem="{Binding SelectedPart}" />
+
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="{StaticResource Magenta}"
+                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+            <Label
+                Text="{Binding SavedMessage}"
+                TextColor="#3EC1A4"
+                IsVisible="{Binding SavedMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Button Text="保存" Command="{Binding SaveCommand}" Margin="0,8,0,0" />
+
+            <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,20,0,20" />
+
+            <Label Text="この端末を別の人が使う場合" FontSize="13" TextColor="{StaticResource Gray500}" />
+            <Button Text="別のプロフィールを使う" Command="{Binding SwitchProfileCommand}"
+                    BackgroundColor="Transparent" TextColor="{StaticResource Magenta}" BorderColor="{StaticResource Magenta}" BorderWidth="1" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

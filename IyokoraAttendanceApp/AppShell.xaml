@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="IyokoraAttendanceApp.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:IyokoraAttendanceApp.Views"
+    Title="出席管理"
+    FlyoutBehavior="Disabled">
+
+    <TabBar>
+        <ShellContent
+            Title="ホーム"
+            Route="home"
+            ContentTemplate="{DataTemplate views:DashboardPage}" />
+
+        <ShellContent
+            Title="予定"
+            Route="schedule"
+            ContentTemplate="{DataTemplate views:SchedulePage}" />
+
+        <ShellContent
+            Title="プロフィール"
+            Route="profile"
+            ContentTemplate="{DataTemplate views:ProfilePage}" />
+    </TabBar>
+
+</Shell>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="IyokoraAttendanceApp.Views.DashboardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:IyokoraAttendanceApp.ViewModels"
+    xmlns:models="clr-namespace:IyokoraAttendanceApp.Models"
+    x:DataType="vm:DashboardViewModel"
+    Title="ホーム">
+
+    <RefreshView IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="18">
+
+                <Label
+                    Text="{Binding MyName, StringFormat='こんにちは、{0} さん'}"
+                    FontSize="18"
+                    FontAttributes="Bold" />
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="{StaticResource Magenta}"
+                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+                <!-- 次回練習カード -->
+                <Frame Padding="16" CornerRadius="14" BorderColor="Transparent"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}"
+                       IsVisible="{Binding HasNextPractice}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="次回の練習" FontSize="13" TextColor="{StaticResource Gray500}" />
+                        <Label Text="{Binding NextPractice.Date, StringFormat='{0:yyyy年M月d日(ddd)}'}"
+                               FontSize="24" FontAttributes="Bold" />
+                        <Label Text="{Binding NextPractice.Title}"
+                               IsVisible="{Binding NextPractice.Title, Converter={StaticResource StringToBoolConverter}}" />
+                        <Label Text="{Binding NextPractice.Place, StringFormat='📍 {0}'}"
+                               IsVisible="{Binding NextPractice.Place, Converter={StaticResource StringToBoolConverter}}"
+                               TextColor="{StaticResource Gray500}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Frame Padding="16" CornerRadius="14" BorderColor="Transparent"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}"
+                       IsVisible="{Binding HasNextPractice, Converter={StaticResource InvertedBoolConverter}}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="次回の練習予定が登録されていません" FontAttributes="Bold" />
+                        <Button Text="予定を登録する" Command="{Binding GoToScheduleCommand}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- パート別出席状況 -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding HasNextPractice}">
+                    <Label Text="パート別 参加予定人数" FontSize="16" FontAttributes="Bold" />
+
+                    <CollectionView ItemsSource="{Binding PartSummaries}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:PartSummary">
+                                <Grid Padding="0,8" ColumnDefinitions="76,*,70" ColumnSpacing="10">
+                                    <Label Text="{Binding Label}" TextColor="{Binding Color}"
+                                           FontAttributes="Bold" VerticalOptions="Center" />
+                                    <ProgressBar Grid.Column="1" Progress="{Binding BarRatio}"
+                                                 ProgressColor="{Binding Color}" VerticalOptions="Center"
+                                                 HeightRequest="14" />
+                                    <Label Grid.Column="2" Text="{Binding CountLabel}"
+                                           FontSize="13" HorizontalOptions="End" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <Label Text="{Binding TotalAttending, StringFormat='合計 参加予定: {0} 人'}"
+                           FontAttributes="Bold" Margin="0,4,0,0" />
+                    <Label Text="{Binding ResponseSummaryLabel}"
+                           FontSize="12" TextColor="{StaticResource Gray500}" />
+                </VerticalStackLayout>
+
+                <!-- 自分の出欠 -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding HasNextPractice}">
+                    <Label Text="あなたの出欠" FontSize="16" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Button Text="参加"
+                                Command="{Binding SetMyStatusCommand}" CommandParameter="{x:Static models:AttendanceStatus.Attending}"
+                                BackgroundColor="{StaticResource Gray300}" TextColor="{StaticResource Black}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsAttendingSelected}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#3EC1A4" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Grid.Column="1" Text="不参加"
+                                Command="{Binding SetMyStatusCommand}" CommandParameter="{x:Static models:AttendanceStatus.NotAttending}"
+                                BackgroundColor="{StaticResource Gray300}" TextColor="{StaticResource Black}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsNotAttendingSelected}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="#E0607A" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Grid.Column="2" Text="未定"
+                                Command="{Binding SetMyStatusCommand}" CommandParameter="{x:Static models:AttendanceStatus.Undecided}"
+                                BackgroundColor="{StaticResource Gray300}" TextColor="{StaticResource Black}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsUndecidedSelected}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                    <Setter Property="TextColor" Value="White" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </Grid>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>
