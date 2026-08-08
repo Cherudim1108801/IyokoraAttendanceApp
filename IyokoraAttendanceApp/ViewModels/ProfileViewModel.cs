@@ -81,6 +81,6 @@ public partial class ProfileViewModel : BaseViewModel
             return;
 
         _profile.Clear();
-        await Shell.Current!.GoToAsync("//onboarding");
+        await Shell.Current!.GoToAsync("onboarding");
     }
 }
