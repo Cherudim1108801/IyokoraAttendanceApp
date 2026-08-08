@@ -9,6 +9,7 @@ namespace IyokoraAttendanceApp.ViewModels;
 public partial class ScheduleViewModel : BaseViewModel
 {
     private readonly PracticeService _practiceService;
+    private bool _isLoading;
 
     public ObservableCollection<Practice> Practices { get; } = [];
 
@@ -32,6 +33,14 @@ public partial class ScheduleViewModel : BaseViewModel
     [RelayCommand]
     public async Task LoadAsync()
     {
+        // RefreshView は IsRefreshing (= IsBusy) が true になると、発生源を問わず
+        // 自動で Command (LoadCommand) を実行する。AddPracticeAsync 等からの呼び出しと
+        // 重なると多重実行され、Practices に重複した項目が追加されてしまうため、
+        // 多重実行を防ぐ。
+        if (_isLoading)
+            return;
+
+        _isLoading = true;
         IsBusy = true;
         ErrorMessage = null;
         try
@@ -48,6 +57,7 @@ public partial class ScheduleViewModel : BaseViewModel
         finally
         {
             IsBusy = false;
+            _isLoading = false;
         }
     }
 
@@ -57,7 +67,6 @@ public partial class ScheduleViewModel : BaseViewModel
     [RelayCommand]
     private async Task AddPracticeAsync()
     {
-        IsBusy = true;
         ErrorMessage = null;
         try
         {
@@ -72,16 +81,11 @@ public partial class ScheduleViewModel : BaseViewModel
         {
             ErrorMessage = $"予定の追加に失敗しました。({ex.Message})";
         }
-        finally
-        {
-            IsBusy = false;
-        }
     }
 
     [RelayCommand]
     private async Task DeletePracticeAsync(Practice practice)
     {
-        IsBusy = true;
         try
         {
             await _practiceService.DeleteAsync(practice.Id);
@@ -90,10 +94,6 @@ public partial class ScheduleViewModel : BaseViewModel
         catch (Exception ex)
         {
             ErrorMessage = $"削除に失敗しました。({ex.Message})";
-        }
-        finally
-        {
-            IsBusy = false;
         }
     }
 

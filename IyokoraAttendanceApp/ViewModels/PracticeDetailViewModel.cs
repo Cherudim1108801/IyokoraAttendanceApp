@@ -13,6 +13,7 @@ public partial class PracticeDetailViewModel : BaseViewModel
     private readonly MemberService _memberService;
     private readonly AttendanceService _attendanceService;
     private readonly LocalProfileStore _profile;
+    private bool _isLoading;
 
     public ObservableCollection<PartGroup> PartGroups { get; } = [];
 
@@ -67,6 +68,14 @@ public partial class PracticeDetailViewModel : BaseViewModel
         if (string.IsNullOrEmpty(PracticeId))
             return;
 
+        // RefreshView は IsRefreshing (= IsBusy) が true になると、発生源を問わず
+        // 自動で Command (LoadCommand) を実行する。SetMyStatusAsync からの呼び出しと
+        // 重なると多重実行され、PartGroups に重複した項目が追加されてしまうため、
+        // 多重実行を防ぐ。
+        if (_isLoading)
+            return;
+
+        _isLoading = true;
         IsBusy = true;
         ErrorMessage = null;
         try
@@ -112,6 +121,7 @@ public partial class PracticeDetailViewModel : BaseViewModel
         finally
         {
             IsBusy = false;
+            _isLoading = false;
         }
     }
 
@@ -121,7 +131,6 @@ public partial class PracticeDetailViewModel : BaseViewModel
         if (Practice is null)
             return;
 
-        IsBusy = true;
         try
         {
             await _attendanceService.SetStatusAsync(Practice.Id, _profile.MemberId, _profile.Name, _profile.Part, status);
@@ -130,10 +139,6 @@ public partial class PracticeDetailViewModel : BaseViewModel
         catch (Exception ex)
         {
             ErrorMessage = $"更新に失敗しました。({ex.Message})";
-        }
-        finally
-        {
-            IsBusy = false;
         }
     }
 }
