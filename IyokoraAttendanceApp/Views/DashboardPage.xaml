@@ -6,8 +6,10 @@
     xmlns:vm="clr-namespace:IyokoraAttendanceApp.ViewModels"
     xmlns:models="clr-namespace:IyokoraAttendanceApp.Models"
     x:DataType="vm:DashboardViewModel"
+    x:Name="Root"
     Title="ホーム">
 
+    <Grid>
     <RefreshView IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="18">
@@ -50,19 +52,28 @@
                 <!-- パート別出席状況 -->
                 <VerticalStackLayout Spacing="10" IsVisible="{Binding HasNextPractice}">
                     <Label Text="パート別 参加予定人数" FontSize="16" FontAttributes="Bold" />
+                    <Label Text="カードをタップすると参加者の名前を確認できます" FontSize="12" TextColor="{StaticResource Gray500}" />
 
                     <CollectionView ItemsSource="{Binding PartSummaries}">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="10" VerticalItemSpacing="10" />
+                        </CollectionView.ItemsLayout>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:PartSummary">
-                                <Grid Padding="0,8" ColumnDefinitions="76,*,70" ColumnSpacing="10">
-                                    <Label Text="{Binding Label}" TextColor="{Binding Color}"
-                                           FontAttributes="Bold" VerticalOptions="Center" />
-                                    <ProgressBar Grid.Column="1" Progress="{Binding BarRatio}"
-                                                 ProgressColor="{Binding Color}" VerticalOptions="Center"
-                                                 HeightRequest="14" />
-                                    <Label Grid.Column="2" Text="{Binding CountLabel}"
-                                           FontSize="13" HorizontalOptions="End" VerticalOptions="Center" />
-                                </Grid>
+                                <Frame Padding="14" CornerRadius="14" BorderColor="Transparent"
+                                       BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowPartDetailCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    </Frame.GestureRecognizers>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Label}" TextColor="{Binding Color}"
+                                               FontAttributes="Bold" FontSize="14" />
+                                        <Label Text="{Binding AttendingCount}" FontSize="40" FontAttributes="Bold" />
+                                        <Label Text="{Binding CountLabel}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                                    </VerticalStackLayout>
+                                </Frame>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
@@ -113,4 +124,36 @@
             </VerticalStackLayout>
         </ScrollView>
     </RefreshView>
+
+    <!-- パート詳細モーダル -->
+    <Grid IsVisible="{Binding IsPartModalVisible}" BackgroundColor="#80000000">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding ClosePartModalCommand}" />
+        </Grid.GestureRecognizers>
+
+        <Frame Padding="20" CornerRadius="16" BorderColor="Transparent"
+               BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray900}}"
+               HorizontalOptions="Center" VerticalOptions="Center" Margin="30" MaximumWidthRequest="360">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="{Binding SelectedPartSummary.Label}" TextColor="{Binding SelectedPartSummary.Color}"
+                       FontSize="20" FontAttributes="Bold" />
+                <Label Text="{Binding SelectedPartSummary.CountLabel}" FontSize="14" TextColor="{StaticResource Gray500}" />
+                <BoxView HeightRequest="1" Color="{StaticResource Gray200}" Margin="0,4,0,4" />
+
+                <CollectionView ItemsSource="{Binding SelectedPartSummary.AttendeeNames}" MaximumHeightRequest="300">
+                    <CollectionView.EmptyView>
+                        <Label Text="参加予定のメンバーはいません。" TextColor="{StaticResource Gray500}" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Label Text="{Binding .}" FontSize="16" Padding="0,6" />
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Button Text="閉じる" Command="{Binding ClosePartModalCommand}" Margin="0,10,0,0" />
+            </VerticalStackLayout>
+        </Frame>
+    </Grid>
+    </Grid>
 </ContentPage>

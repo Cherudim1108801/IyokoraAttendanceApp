@@ -34,6 +34,12 @@ public partial class DashboardViewModel : BaseViewModel
     [ObservableProperty]
     private int totalResponded;
 
+    [ObservableProperty]
+    private PartSummary? selectedPartSummary;
+
+    [ObservableProperty]
+    private bool isPartModalVisible;
+
     public string MyName => _profile.Name;
 
     public string ResponseSummaryLabel => $"回答済み: {TotalResponded} 人 (登録メンバー全 {TotalMembers} 人)";
@@ -101,23 +107,27 @@ public partial class DashboardViewModel : BaseViewModel
                 .GroupBy(a => a.Part)
                 .ToDictionary(g => g.Key, g => g.Count());
 
+            var attendingNamesByPart = attendances
+                .Where(a => a.Status == AttendanceStatus.Attending)
+                .GroupBy(a => a.Part)
+                .ToDictionary(
+                    g => g.Key,
+                    g => (IReadOnlyList<string>)g.Select(a => a.MemberName).OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList());
+
             var membersByPart = members
                 .GroupBy(m => m.Part)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            var maxCount = Math.Max(1, PartTypeExtensions.All.Select(p => attendingByPart.GetValueOrDefault(p)).DefaultIfEmpty(0).Max());
-
             foreach (var part in PartTypeExtensions.All)
             {
-                var attendingCount = attendingByPart.GetValueOrDefault(part);
                 PartSummaries.Add(new PartSummary
                 {
                     Part = part,
                     Label = part.ToDisplayName(),
                     Color = part.ToColor(),
-                    AttendingCount = attendingCount,
+                    AttendingCount = attendingByPart.GetValueOrDefault(part),
                     MemberCount = membersByPart.GetValueOrDefault(part),
-                    BarRatio = (double)attendingCount / maxCount
+                    AttendeeNames = attendingNamesByPart.GetValueOrDefault(part) ?? []
                 });
             }
 
@@ -158,6 +168,16 @@ public partial class DashboardViewModel : BaseViewModel
         if (Shell.Current is not null)
             await Shell.Current.GoToAsync("//schedule");
     }
+
+    [RelayCommand]
+    private void ShowPartDetail(PartSummary summary)
+    {
+        SelectedPartSummary = summary;
+        IsPartModalVisible = true;
+    }
+
+    [RelayCommand]
+    private void ClosePartModal() => IsPartModalVisible = false;
 
     public void RefreshProfileDisplay() => OnPropertyChanged(nameof(MyName));
 }
