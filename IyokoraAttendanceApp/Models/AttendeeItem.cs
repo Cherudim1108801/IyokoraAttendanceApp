@@ -1,5 +1,6 @@
 namespace IyokoraAttendanceApp.Models;
 
+/// <summary>練習詳細画面のメンバー一覧に表示する、1人分の出欠表示用データ。</summary>
 public class AttendeeItem
 {
     public required string MemberId { get; init; }
@@ -9,6 +10,7 @@ public class AttendeeItem
     public Color StatusColor => Status.ToColor();
 }
 
+/// <summary>練習詳細画面における、パートごとの出欠集計とメンバー一覧（表示用データ）。</summary>
 public class PartGroup
 {
     public required PartType Part { get; init; }

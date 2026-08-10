@@ -10,15 +10,11 @@ namespace IyokoraAttendanceApp.Services;
 /// 認証なし運用のため、Firestore 側のセキュリティルールで
 /// 未認証アクセスを許可しておく必要がある（<see cref="FirebaseOptions"/> 参照）。
 /// </summary>
-public class FirestoreClient
+public class FirestoreClient(HttpClient http)
 {
-    private readonly HttpClient _http;
-
-    public FirestoreClient(HttpClient http)
-    {
-        _http = http;
-    }
-
+    /// <summary>指定コレクション内の全ドキュメントを取得する（ページングを内部で吸収）。</summary>
+    /// <param name="collection">コレクション名。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task<List<FirestoreDocument>> ListDocumentsAsync(string collection, CancellationToken ct = default)
     {
         var results = new List<FirestoreDocument>();
@@ -30,7 +26,7 @@ public class FirestoreClient
             if (!string.IsNullOrEmpty(pageToken))
                 url += $"&pageToken={Uri.EscapeDataString(pageToken)}";
 
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await http.GetAsync(url, ct);
             if (resp.StatusCode == HttpStatusCode.NotFound)
                 break; // コレクション未作成 = データなし
 
@@ -53,10 +49,14 @@ public class FirestoreClient
         return results;
     }
 
+    /// <summary>指定IDのドキュメントを1件取得する。存在しない場合は null。</summary>
+    /// <param name="collection">コレクション名。</param>
+    /// <param name="documentId">ドキュメントID。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task<FirestoreDocument?> GetDocumentAsync(string collection, string documentId, CancellationToken ct = default)
     {
         var url = $"{FirebaseOptions.FirestoreBaseUrl}/{collection}/{Uri.EscapeDataString(documentId)}";
-        using var resp = await _http.GetAsync(url, ct);
+        using var resp = await http.GetAsync(url, ct);
         if (resp.StatusCode == HttpStatusCode.NotFound)
             return null;
 
@@ -66,6 +66,11 @@ public class FirestoreClient
         return node is null ? null : ParseDocument(node);
     }
 
+    /// <summary>指定IDのドキュメントを作成または上書き保存する（存在しなければ新規作成）。</summary>
+    /// <param name="collection">コレクション名。</param>
+    /// <param name="documentId">ドキュメントID。</param>
+    /// <param name="fields">保存するフィールドの一覧。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task UpsertDocumentAsync(string collection, string documentId, Dictionary<string, object?> fields, CancellationToken ct = default)
     {
         var body = new JsonObject { ["fields"] = ToFirestoreFields(fields) };
@@ -74,14 +79,18 @@ public class FirestoreClient
 
         using var content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
         using var request = new HttpRequestMessage(HttpMethod.Patch, url) { Content = content };
-        using var resp = await _http.SendAsync(request, ct);
+        using var resp = await http.SendAsync(request, ct);
         resp.EnsureSuccessStatusCode();
     }
 
+    /// <summary>指定IDのドキュメントを削除する。存在しない場合は何もしない。</summary>
+    /// <param name="collection">コレクション名。</param>
+    /// <param name="documentId">ドキュメントID。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task DeleteDocumentAsync(string collection, string documentId, CancellationToken ct = default)
     {
         var url = $"{FirebaseOptions.FirestoreBaseUrl}/{collection}/{Uri.EscapeDataString(documentId)}";
-        using var resp = await _http.DeleteAsync(url, ct);
+        using var resp = await http.DeleteAsync(url, ct);
         if (resp.StatusCode != HttpStatusCode.NotFound)
             resp.EnsureSuccessStatusCode();
     }

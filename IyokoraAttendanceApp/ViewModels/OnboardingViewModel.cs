@@ -5,31 +5,18 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-public partial class OnboardingViewModel : BaseViewModel
+/// <summary>初回登録（オンボーディング）画面用のViewModel。名前・パートの登録を担う。</summary>
+public partial class OnboardingViewModel(MemberService memberService, LocalProfileStore profile) : BaseViewModel
 {
-    private readonly MemberService _memberService;
-    private readonly LocalProfileStore _profile;
-
     public List<PartOption> PartOptions { get; } = PartOption.All;
 
     [ObservableProperty]
-    private string name = string.Empty;
+    private string name = profile.IsRegistered ? profile.Name : string.Empty;
 
     [ObservableProperty]
-    private PartOption selectedPart;
-
-    public OnboardingViewModel(MemberService memberService, LocalProfileStore profile)
-    {
-        _memberService = memberService;
-        _profile = profile;
-        selectedPart = PartOptions[0];
-
-        if (_profile.IsRegistered)
-        {
-            name = _profile.Name;
-            selectedPart = PartOptions.First(p => p.Part == _profile.Part);
-        }
-    }
+    private PartOption selectedPart = profile.IsRegistered
+        ? PartOption.All.First(p => p.Part == profile.Part)
+        : PartOption.All[0];
 
     [RelayCommand]
     private async Task SaveAsync()
@@ -45,9 +32,9 @@ public partial class OnboardingViewModel : BaseViewModel
         ErrorMessage = null;
         try
         {
-            _profile.Name = trimmedName;
-            _profile.Part = SelectedPart.Part;
-            await _memberService.SaveAsync(_profile.MemberId, trimmedName, SelectedPart.Part);
+            profile.Name = trimmedName;
+            profile.Part = SelectedPart.Part;
+            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part);
 
             if (Shell.Current is not null)
                 await Shell.Current.GoToAsync("//home");

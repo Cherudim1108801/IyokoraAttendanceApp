@@ -6,9 +6,9 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-public partial class ScheduleViewModel : BaseViewModel
+/// <summary>練習予定一覧画面用のViewModel。一覧の取得・追加・削除を担う。</summary>
+public partial class ScheduleViewModel(PracticeService practiceService) : BaseViewModel
 {
-    private readonly PracticeService _practiceService;
     private bool _isLoading;
 
     public ObservableCollection<Practice> Practices { get; } = [];
@@ -25,11 +25,6 @@ public partial class ScheduleViewModel : BaseViewModel
     [ObservableProperty]
     private string newPlace = string.Empty;
 
-    public ScheduleViewModel(PracticeService practiceService)
-    {
-        _practiceService = practiceService;
-    }
-
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -45,7 +40,7 @@ public partial class ScheduleViewModel : BaseViewModel
         ErrorMessage = null;
         try
         {
-            var practices = await _practiceService.GetAllAsync();
+            var practices = await practiceService.GetAllAsync();
             Practices.Clear();
             foreach (var practice in practices)
                 Practices.Add(practice);
@@ -70,7 +65,7 @@ public partial class ScheduleViewModel : BaseViewModel
         ErrorMessage = null;
         try
         {
-            await _practiceService.CreateAsync(NewDate, NewTitle.Trim(), NewPlace.Trim());
+            await practiceService.CreateAsync(NewDate, NewTitle.Trim(), NewPlace.Trim());
             NewTitle = string.Empty;
             NewPlace = string.Empty;
             NewDate = DateTime.Today.AddDays(7);
@@ -88,7 +83,7 @@ public partial class ScheduleViewModel : BaseViewModel
     {
         try
         {
-            await _practiceService.DeleteAsync(practice.Id);
+            await practiceService.DeleteAsync(practice.Id);
             Practices.Remove(practice);
         }
         catch (Exception ex)

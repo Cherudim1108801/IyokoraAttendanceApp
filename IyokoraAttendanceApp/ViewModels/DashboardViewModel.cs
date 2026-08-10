@@ -6,12 +6,9 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-public partial class DashboardViewModel : BaseViewModel
+/// <summary>ホーム画面（トップページ）用のViewModel。次回練習のパート別参加予定人数を集計する。</summary>
+public partial class DashboardViewModel(MemberService memberService, PracticeService practiceService, AttendanceService attendanceService, LocalProfileStore profile) : BaseViewModel
 {
-    private readonly MemberService _memberService;
-    private readonly PracticeService _practiceService;
-    private readonly AttendanceService _attendanceService;
-    private readonly LocalProfileStore _profile;
     private bool _isLoading;
 
     public ObservableCollection<PartSummary> PartSummaries { get; } = [];
@@ -40,7 +37,7 @@ public partial class DashboardViewModel : BaseViewModel
     [ObservableProperty]
     private bool isPartModalVisible;
 
-    public string MyName => _profile.Name;
+    public string MyName => profile.Name;
 
     public string ResponseSummaryLabel => $"回答済み: {TotalResponded} 人 (登録メンバー全 {TotalMembers} 人)";
 
@@ -58,14 +55,7 @@ public partial class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(IsUndecidedSelected));
     }
 
-    public DashboardViewModel(MemberService memberService, PracticeService practiceService, AttendanceService attendanceService, LocalProfileStore profile)
-    {
-        _memberService = memberService;
-        _practiceService = practiceService;
-        _attendanceService = attendanceService;
-        _profile = profile;
-    }
-
+    /// <summary>次回練習と、パート別の参加予定人数・参加者名一覧を読み込む。</summary>
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -81,8 +71,8 @@ public partial class DashboardViewModel : BaseViewModel
         ErrorMessage = null;
         try
         {
-            var practice = await _practiceService.GetNextUpcomingAsync();
-            var members = await _memberService.GetAllAsync();
+            var practice = await practiceService.GetNextUpcomingAsync();
+            var members = await memberService.GetAllAsync();
 
             NextPractice = practice;
             HasNextPractice = practice is not null;
@@ -98,8 +88,8 @@ public partial class DashboardViewModel : BaseViewModel
                 return;
             }
 
-            var attendances = await _attendanceService.GetForPracticeAsync(practice.Id);
-            var mine = attendances.FirstOrDefault(a => a.MemberId == _profile.MemberId);
+            var attendances = await attendanceService.GetForPracticeAsync(practice.Id);
+            var mine = attendances.FirstOrDefault(a => a.MemberId == profile.MemberId);
             MyStatus = mine?.Status ?? AttendanceStatus.Undecided;
 
             var attendingByPart = attendances
@@ -153,7 +143,7 @@ public partial class DashboardViewModel : BaseViewModel
 
         try
         {
-            await _attendanceService.SetStatusAsync(NextPractice.Id, _profile.MemberId, _profile.Name, _profile.Part, status);
+            await attendanceService.SetStatusAsync(NextPractice.Id, profile.MemberId, profile.Name, profile.Part, status);
             await LoadAsync();
         }
         catch (Exception ex)
