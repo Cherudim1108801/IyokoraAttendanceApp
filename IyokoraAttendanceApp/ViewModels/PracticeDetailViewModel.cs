@@ -6,13 +6,10 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
+/// <summary>練習詳細画面用のViewModel。指定練習のパート別出欠一覧を表示する。</summary>
 [QueryProperty(nameof(PracticeId), "practiceId")]
-public partial class PracticeDetailViewModel : BaseViewModel
+public partial class PracticeDetailViewModel(PracticeService practiceService, MemberService memberService, AttendanceService attendanceService, LocalProfileStore profile) : BaseViewModel
 {
-    private readonly PracticeService _practiceService;
-    private readonly MemberService _memberService;
-    private readonly AttendanceService _attendanceService;
-    private readonly LocalProfileStore _profile;
     private bool _isLoading;
 
     public ObservableCollection<PartGroup> PartGroups { get; } = [];
@@ -48,20 +45,13 @@ public partial class PracticeDetailViewModel : BaseViewModel
     partial void OnTotalAttendingChanged(int value) => OnPropertyChanged(nameof(AttendanceSummaryLabel));
     partial void OnTotalMembersChanged(int value) => OnPropertyChanged(nameof(AttendanceSummaryLabel));
 
-    public PracticeDetailViewModel(PracticeService practiceService, MemberService memberService, AttendanceService attendanceService, LocalProfileStore profile)
-    {
-        _practiceService = practiceService;
-        _memberService = memberService;
-        _attendanceService = attendanceService;
-        _profile = profile;
-    }
-
     partial void OnPracticeIdChanged(string value)
     {
         if (!string.IsNullOrEmpty(value))
             _ = LoadAsync();
     }
 
+    /// <summary>対象練習の情報と、パート別の出欠一覧を読み込む。</summary>
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -80,12 +70,12 @@ public partial class PracticeDetailViewModel : BaseViewModel
         ErrorMessage = null;
         try
         {
-            Practice = await _practiceService.GetByIdAsync(PracticeId);
-            var members = await _memberService.GetAllAsync();
-            var attendances = await _attendanceService.GetForPracticeAsync(PracticeId);
+            Practice = await practiceService.GetByIdAsync(PracticeId);
+            var members = await memberService.GetAllAsync();
+            var attendances = await attendanceService.GetForPracticeAsync(PracticeId);
             var statusByMemberId = attendances.ToDictionary(a => a.MemberId, a => a.Status);
 
-            MyStatus = statusByMemberId.GetValueOrDefault(_profile.MemberId, AttendanceStatus.Undecided);
+            MyStatus = statusByMemberId.GetValueOrDefault(profile.MemberId, AttendanceStatus.Undecided);
             TotalMembers = members.Count;
             TotalAttending = attendances.Count(a => a.Status == AttendanceStatus.Attending);
 
@@ -133,7 +123,7 @@ public partial class PracticeDetailViewModel : BaseViewModel
 
         try
         {
-            await _attendanceService.SetStatusAsync(Practice.Id, _profile.MemberId, _profile.Name, _profile.Part, status);
+            await attendanceService.SetStatusAsync(Practice.Id, profile.MemberId, profile.Name, profile.Part, status);
             await LoadAsync();
         }
         catch (Exception ex)

@@ -2,31 +2,40 @@ using IyokoraAttendanceApp.Models;
 
 namespace IyokoraAttendanceApp.Services;
 
-public class AttendanceService
+/// <summary>Firestore の <c>attendances</c> コレクションに対する出欠情報の取得・更新を担う。</summary>
+public class AttendanceService(FirestoreClient client)
 {
     private const string Collection = "attendances";
-    private readonly FirestoreClient _client;
 
-    public AttendanceService(FirestoreClient client)
-    {
-        _client = client;
-    }
-
+    /// <summary>指定練習に対する全メンバーの出欠を取得する。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task<List<Attendance>> GetForPracticeAsync(string practiceId, CancellationToken ct = default)
     {
-        var docs = await _client.ListDocumentsAsync(Collection, ct);
+        var docs = await client.ListDocumentsAsync(Collection, ct);
         return docs
             .Where(d => d.GetString("groupId") == FirebaseOptions.GroupId && d.GetString("practiceId") == practiceId)
             .Select(ToAttendance)
             .ToList();
     }
 
+    /// <summary>指定練習における、指定メンバー1人分の出欠を取得する。未回答の場合は null。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="memberId">メンバーID。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task<Attendance?> GetForMemberAsync(string practiceId, string memberId, CancellationToken ct = default)
     {
         var all = await GetForPracticeAsync(practiceId, ct);
         return all.FirstOrDefault(a => a.MemberId == memberId);
     }
 
+    /// <summary>指定練習・指定メンバーの出欠状態を登録または更新する。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="memberId">メンバーID。</param>
+    /// <param name="memberName">メンバー名（非正規化して保存）。</param>
+    /// <param name="part">所属パート（非正規化して保存）。</param>
+    /// <param name="status">出欠状態。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public Task SetStatusAsync(string practiceId, string memberId, string memberName, PartType part, AttendanceStatus status, CancellationToken ct = default)
     {
         var id = Attendance.BuildId(practiceId, memberId);
@@ -40,7 +49,7 @@ public class AttendanceService
             ["status"] = status.ToString(),
             ["updatedAt"] = DateTime.UtcNow
         };
-        return _client.UpsertDocumentAsync(Collection, id, fields, ct);
+        return client.UpsertDocumentAsync(Collection, id, fields, ct);
     }
 
     private static Attendance ToAttendance(FirestoreDocument doc) => new()

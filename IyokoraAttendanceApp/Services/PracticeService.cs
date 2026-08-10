@@ -2,19 +2,16 @@ using IyokoraAttendanceApp.Models;
 
 namespace IyokoraAttendanceApp.Services;
 
-public class PracticeService
+/// <summary>Firestore の <c>practices</c> コレクションに対する練習予定の取得・作成・削除を担う。</summary>
+public class PracticeService(FirestoreClient client)
 {
     private const string Collection = "practices";
-    private readonly FirestoreClient _client;
 
-    public PracticeService(FirestoreClient client)
-    {
-        _client = client;
-    }
-
+    /// <summary>登録されている全練習予定を日付昇順で取得する。</summary>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task<List<Practice>> GetAllAsync(CancellationToken ct = default)
     {
-        var docs = await _client.ListDocumentsAsync(Collection, ct);
+        var docs = await client.ListDocumentsAsync(Collection, ct);
         return docs
             .Where(d => d.GetString("groupId") == FirebaseOptions.GroupId)
             .Select(ToPractice)
@@ -22,12 +19,17 @@ public class PracticeService
             .ToList();
     }
 
+    /// <summary>指定IDの練習予定を1件取得する。存在しない場合は null。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task<Practice?> GetByIdAsync(string practiceId, CancellationToken ct = default)
     {
-        var doc = await _client.GetDocumentAsync(Collection, practiceId, ct);
+        var doc = await client.GetDocumentAsync(Collection, practiceId, ct);
         return doc is null ? null : ToPractice(doc);
     }
 
+    /// <summary>今日以降で最も近い練習予定を取得する。存在しない場合は null。</summary>
+    /// <param name="ct">キャンセルトークン。</param>
     public async Task<Practice?> GetNextUpcomingAsync(CancellationToken ct = default)
     {
         var all = await GetAllAsync(ct);
@@ -35,6 +37,12 @@ public class PracticeService
         return all.Where(p => p.Date.Date >= today).OrderBy(p => p.Date).FirstOrDefault();
     }
 
+    /// <summary>新しい練習予定を登録する。</summary>
+    /// <param name="date">練習日（時刻情報は無視される）。</param>
+    /// <param name="title">タイトル（任意）。</param>
+    /// <param name="place">場所（任意）。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    /// <returns>発行された練習予定ID。</returns>
     public async Task<string> CreateAsync(DateTime date, string title, string place, CancellationToken ct = default)
     {
         var id = Guid.NewGuid().ToString("N");
@@ -49,12 +57,15 @@ public class PracticeService
             ["place"] = place,
             ["createdAt"] = DateTime.UtcNow
         };
-        await _client.UpsertDocumentAsync(Collection, id, fields, ct);
+        await client.UpsertDocumentAsync(Collection, id, fields, ct);
         return id;
     }
 
+    /// <summary>指定IDの練習予定を削除する。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="ct">キャンセルトークン。</param>
     public Task DeleteAsync(string practiceId, CancellationToken ct = default) =>
-        _client.DeleteDocumentAsync(Collection, practiceId, ct);
+        client.DeleteDocumentAsync(Collection, practiceId, ct);
 
     private static Practice ToPractice(FirestoreDocument doc) => new()
     {

@@ -5,35 +5,19 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-public partial class ProfileViewModel : BaseViewModel
+/// <summary>プロフィール画面用のViewModel。自分の名前・パートの編集とプロフィール切り替えを担う。</summary>
+public partial class ProfileViewModel(MemberService memberService, LocalProfileStore profile) : BaseViewModel
 {
-    private readonly MemberService _memberService;
-    private readonly LocalProfileStore _profile;
-
     public List<PartOption> PartOptions { get; } = PartOption.All;
 
     [ObservableProperty]
-    private string name = string.Empty;
+    private string name = profile.Name;
 
     [ObservableProperty]
-    private PartOption selectedPart;
+    private PartOption selectedPart = PartOption.All.First(p => p.Part == profile.Part);
 
     [ObservableProperty]
     private string? savedMessage;
-
-    public ProfileViewModel(MemberService memberService, LocalProfileStore profile)
-    {
-        _memberService = memberService;
-        _profile = profile;
-        selectedPart = PartOptions[0];
-        Load();
-    }
-
-    private void Load()
-    {
-        Name = _profile.Name;
-        SelectedPart = PartOptions.First(p => p.Part == _profile.Part);
-    }
 
     [RelayCommand]
     private async Task SaveAsync()
@@ -50,9 +34,9 @@ public partial class ProfileViewModel : BaseViewModel
         SavedMessage = null;
         try
         {
-            _profile.Name = trimmedName;
-            _profile.Part = SelectedPart.Part;
-            await _memberService.SaveAsync(_profile.MemberId, trimmedName, SelectedPart.Part);
+            profile.Name = trimmedName;
+            profile.Part = SelectedPart.Part;
+            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part);
             SavedMessage = "保存しました。";
         }
         catch (Exception ex)
@@ -80,7 +64,7 @@ public partial class ProfileViewModel : BaseViewModel
         if (!confirmed)
             return;
 
-        _profile.Clear();
+        profile.Clear();
         await Shell.Current!.GoToAsync("onboarding");
     }
 }
