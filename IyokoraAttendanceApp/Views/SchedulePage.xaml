@@ -14,7 +14,7 @@
         <VerticalStackLayout Grid.Row="0" Padding="16,12" Spacing="10">
             <Button Text="＋ 練習予定を追加" Command="{Binding ToggleAddPanelCommand}" />
 
-            <Frame IsVisible="{Binding IsAddPanelVisible}" Padding="14" CornerRadius="12" BorderColor="Transparent"
+            <Border IsVisible="{Binding IsAddPanelVisible}" Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
                    BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="日付" FontAttributes="Bold" />
@@ -28,7 +28,7 @@
 
                     <Button Text="この内容で登録" Command="{Binding AddPracticeCommand}" />
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <Label
                 Text="{Binding ErrorMessage}"
@@ -45,14 +45,16 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Practice">
                         <Grid Padding="0,6">
-                            <Frame Padding="14" CornerRadius="12" BorderColor="Transparent"
-                                   BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray900}}"
-                                   HasShadow="True">
-                                <Frame.GestureRecognizers>
+                            <Border Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
+                                   BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray900}}">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.15" Radius="8" Offset="0,2" />
+                                </Border.Shadow>
+                                <Border.GestureRecognizers>
                                     <TapGestureRecognizer
                                         Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenDetailCommand}"
                                         CommandParameter="{Binding .}" />
-                                </Frame.GestureRecognizers>
+                                </Border.GestureRecognizers>
                                 <Grid ColumnDefinitions="*,Auto">
                                     <VerticalStackLayout Spacing="4">
                                         <Label Text="{Binding Date, StringFormat='{0:yyyy年M月d日(ddd)}'}"
@@ -68,7 +70,7 @@
                                             Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeletePracticeCommand}"
                                             CommandParameter="{Binding .}" />
                                 </Grid>
-                            </Frame>
+                            </Border>
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

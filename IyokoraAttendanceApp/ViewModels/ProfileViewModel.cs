@@ -10,14 +10,17 @@ public partial class ProfileViewModel(MemberService memberService, LocalProfileS
 {
     public List<PartOption> PartOptions { get; } = PartOption.All;
 
+    /// <summary>編集中の表示名。</summary>
     [ObservableProperty]
-    private string name = profile.Name;
+    public partial string Name { get; set; } = profile.Name;
 
+    /// <summary>選択中のパート。</summary>
     [ObservableProperty]
-    private PartOption selectedPart = PartOption.All.First(p => p.Part == profile.Part);
+    public partial PartOption SelectedPart { get; set; } = PartOption.All.First(p => p.Part == profile.Part);
 
+    /// <summary>保存完了メッセージ。未保存または保存操作前は null。</summary>
     [ObservableProperty]
-    private string? savedMessage;
+    public partial string? SavedMessage { get; set; }
 
     [RelayCommand]
     private async Task SaveAsync()

@@ -13,17 +13,21 @@ public partial class ScheduleViewModel(PracticeService practiceService) : BaseVi
 
     public ObservableCollection<Practice> Practices { get; } = [];
 
+    /// <summary>練習予定の追加パネルを表示中かどうか。</summary>
     [ObservableProperty]
-    private bool isAddPanelVisible;
+    public partial bool IsAddPanelVisible { get; set; }
 
+    /// <summary>入力中の練習日。</summary>
     [ObservableProperty]
-    private DateTime newDate = DateTime.Today.AddDays(7);
+    public partial DateTime NewDate { get; set; } = DateTime.Today.AddDays(7);
 
+    /// <summary>入力中のタイトル（任意）。</summary>
     [ObservableProperty]
-    private string newTitle = string.Empty;
+    public partial string NewTitle { get; set; } = string.Empty;
 
+    /// <summary>入力中の場所（任意）。</summary>
     [ObservableProperty]
-    private string newPlace = string.Empty;
+    public partial string NewPlace { get; set; } = string.Empty;
 
     [RelayCommand]
     public async Task LoadAsync()

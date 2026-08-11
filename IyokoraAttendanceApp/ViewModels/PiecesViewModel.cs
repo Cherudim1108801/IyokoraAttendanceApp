@@ -19,11 +19,13 @@ public partial class PiecesViewModel(PieceService pieceService) : BaseViewModel
 
     public List<PartDivisionOption> DivisionOptions { get; } = PartDivisionOption.All;
 
+    /// <summary>曲登録パネルを表示中かどうか。</summary>
     [ObservableProperty]
-    private bool isAddPanelVisible;
+    public partial bool IsAddPanelVisible { get; set; }
 
+    /// <summary>入力中の曲名。</summary>
     [ObservableProperty]
-    private string newTitle = string.Empty;
+    public partial string NewTitle { get; set; } = string.Empty;
 
     [RelayCommand]
     public async Task LoadAsync()

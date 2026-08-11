@@ -10,11 +10,13 @@ public partial class OnboardingViewModel(MemberService memberService, LocalProfi
 {
     public List<PartOption> PartOptions { get; } = PartOption.All;
 
+    /// <summary>入力中の表示名。</summary>
     [ObservableProperty]
-    private string name = profile.IsRegistered ? profile.Name : string.Empty;
+    public partial string Name { get; set; } = profile.IsRegistered ? profile.Name : string.Empty;
 
+    /// <summary>選択中のパート。</summary>
     [ObservableProperty]
-    private PartOption selectedPart = profile.IsRegistered
+    public partial PartOption SelectedPart { get; set; } = profile.IsRegistered
         ? PartOption.All.First(p => p.Part == profile.Part)
         : PartOption.All[0];
 

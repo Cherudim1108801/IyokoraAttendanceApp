@@ -13,29 +13,37 @@ public partial class DashboardViewModel(MemberService memberService, PracticeSer
 
     public ObservableCollection<PartSummary> PartSummaries { get; } = [];
 
+    /// <summary>今日以降で最も近い練習予定。存在しない場合は null。</summary>
     [ObservableProperty]
-    private Practice? nextPractice;
+    public partial Practice? NextPractice { get; set; }
 
+    /// <summary>次回練習予定が登録されているかどうか。</summary>
     [ObservableProperty]
-    private bool hasNextPractice;
+    public partial bool HasNextPractice { get; set; }
 
+    /// <summary>次回練習に対する自分の出欠状態。</summary>
     [ObservableProperty]
-    private AttendanceStatus myStatus = AttendanceStatus.Undecided;
+    public partial AttendanceStatus MyStatus { get; set; } = AttendanceStatus.Undecided;
 
+    /// <summary>次回練習の合計参加予定人数。</summary>
     [ObservableProperty]
-    private int totalAttending;
+    public partial int TotalAttending { get; set; }
 
+    /// <summary>登録メンバーの総数。</summary>
     [ObservableProperty]
-    private int totalMembers;
+    public partial int TotalMembers { get; set; }
 
+    /// <summary>次回練習について出欠を回答済みのメンバー数（未定を除く）。</summary>
     [ObservableProperty]
-    private int totalResponded;
+    public partial int TotalResponded { get; set; }
 
+    /// <summary>パート詳細モーダルで表示中のパート集計。表示していない場合は null。</summary>
     [ObservableProperty]
-    private PartSummary? selectedPartSummary;
+    public partial PartSummary? SelectedPartSummary { get; set; }
 
+    /// <summary>パート詳細モーダルを表示中かどうか。</summary>
     [ObservableProperty]
-    private bool isPartModalVisible;
+    public partial bool IsPartModalVisible { get; set; }
 
     public string MyName => profile.Name;
 

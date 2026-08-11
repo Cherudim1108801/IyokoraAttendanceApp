@@ -14,20 +14,25 @@ public partial class PracticeDetailViewModel(PracticeService practiceService, Me
 
     public ObservableCollection<PartGroup> PartGroups { get; } = [];
 
+    /// <summary>表示対象の練習予定ID（ナビゲーションのクエリパラメータ <c>practiceId</c> から設定される）。</summary>
     [ObservableProperty]
-    private string practiceId = string.Empty;
+    public partial string PracticeId { get; set; } = string.Empty;
 
+    /// <summary>表示対象の練習予定。未読み込みの場合は null。</summary>
     [ObservableProperty]
-    private Practice? practice;
+    public partial Practice? Practice { get; set; }
 
+    /// <summary>この練習に対する自分の出欠状態。</summary>
     [ObservableProperty]
-    private AttendanceStatus myStatus = AttendanceStatus.Undecided;
+    public partial AttendanceStatus MyStatus { get; set; } = AttendanceStatus.Undecided;
 
+    /// <summary>この練習の合計参加予定人数。</summary>
     [ObservableProperty]
-    private int totalAttending;
+    public partial int TotalAttending { get; set; }
 
+    /// <summary>登録メンバーの総数。</summary>
     [ObservableProperty]
-    private int totalMembers;
+    public partial int TotalMembers { get; set; }
 
     public bool IsAttendingSelected => MyStatus == AttendanceStatus.Attending;
     public bool IsNotAttendingSelected => MyStatus == AttendanceStatus.NotAttending;
