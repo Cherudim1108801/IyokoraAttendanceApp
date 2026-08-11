@@ -113,6 +113,8 @@ public class FirestoreClient(HttpClient http)
         double d => new JsonObject { ["doubleValue"] = d },
         DateTime dt => new JsonObject { ["timestampValue"] = dt.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture) },
         Enum e => new JsonObject { ["stringValue"] = e.ToString() },
+        Dictionary<string, object?> map => new JsonObject { ["mapValue"] = new JsonObject { ["fields"] = ToFirestoreFields(map) } },
+        IEnumerable<object?> list => new JsonObject { ["arrayValue"] = new JsonObject { ["values"] = new JsonArray(list.Select(ToFirestoreValue).ToArray()) } },
         _ => throw new NotSupportedException($"Unsupported Firestore value type: {value.GetType()}")
     };
 
@@ -145,10 +147,40 @@ public class FirestoreClient(HttpClient http)
                 "integerValue" => long.Parse(value!.GetValue<string>(), CultureInfo.InvariantCulture),
                 "doubleValue" => value?.GetValue<double>(),
                 "timestampValue" => DateTime.Parse(value!.GetValue<string>(), CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal),
+                "arrayValue" => ParseArray(value as JsonObject),
+                "mapValue" => ParseMap(value as JsonObject),
                 "nullValue" => null,
                 _ => null
             };
         }
         return null;
+    }
+
+    private static List<object?> ParseArray(JsonObject? arrayValue)
+    {
+        var list = new List<object?>();
+        if (arrayValue?["values"] is JsonArray values)
+        {
+            foreach (var v in values)
+            {
+                if (v is JsonObject vo)
+                    list.Add(ParseValue(vo));
+            }
+        }
+        return list;
+    }
+
+    private static Dictionary<string, object?> ParseMap(JsonObject? mapValue)
+    {
+        var dict = new Dictionary<string, object?>();
+        if (mapValue?["fields"] is JsonObject fields)
+        {
+            foreach (var (key, val) in fields)
+            {
+                if (val is JsonObject vo)
+                    dict[key] = ParseValue(vo);
+            }
+        }
+        return dict;
     }
 }

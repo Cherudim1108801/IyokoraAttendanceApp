@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="IyokoraAttendanceApp.Views.PiecesPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:IyokoraAttendanceApp.ViewModels"
+    xmlns:models="clr-namespace:IyokoraAttendanceApp.Models"
+    x:DataType="vm:PiecesViewModel"
+    x:Name="Root"
+    Title="曲">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <VerticalStackLayout Grid.Row="0" Padding="16,12" Spacing="10">
+            <Button Text="＋ 曲を追加" Command="{Binding ToggleAddPanelCommand}" />
+
+            <Frame IsVisible="{Binding IsAddPanelVisible}" Padding="14" CornerRadius="12" BorderColor="Transparent"
+                   BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="曲名" FontAttributes="Bold" />
+                    <Entry Text="{Binding NewTitle}" Placeholder="例：ふるさと" />
+
+                    <Label Text="使用パート" FontAttributes="Bold" Margin="0,8,0,0" />
+                    <Label Text="パートごとに使用の有無と、必要であれば内部分割方式を選べます。" FontSize="12" TextColor="{StaticResource Gray500}" />
+
+                    <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding PartInputs}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PartAssignmentInput">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Padding="0,6" ColumnSpacing="8">
+                                    <CheckBox IsChecked="{Binding IsSelected}" />
+                                    <Label Grid.Column="1" Text="{Binding Label}" VerticalOptions="Center" />
+                                    <Picker Grid.Column="2" WidthRequest="140"
+                                            IsEnabled="{Binding IsSelected}"
+                                            ItemsSource="{Binding Source={x:Reference Root}, Path=BindingContext.DivisionOptions}"
+                                            ItemDisplayBinding="{Binding Label}"
+                                            SelectedItem="{Binding SelectedDivision}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Button Text="この内容で登録" Command="{Binding AddPieceCommand}" Margin="0,8,0,0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="{StaticResource Magenta}"
+                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        </VerticalStackLayout>
+
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
+            <CollectionView ItemsSource="{Binding Pieces}" Margin="16,0,16,16">
+                <CollectionView.EmptyView>
+                    <Label Text="登録されている曲はありません。" HorizontalOptions="Center" Margin="0,40,0,0"
+                           TextColor="{StaticResource Gray500}" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Piece">
+                        <Grid Padding="0,6">
+                            <Frame Padding="14" CornerRadius="12" BorderColor="Transparent"
+                                   BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray900}}"
+                                   HasShadow="True">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Spacing="4">
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+                                        <Label Text="{Binding PartsSummary}"
+                                               FontSize="12" TextColor="{StaticResource Gray500}" />
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="1" Text="削除" FontSize="12"
+                                            BackgroundColor="Transparent" TextColor="{StaticResource Magenta}"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeletePieceCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

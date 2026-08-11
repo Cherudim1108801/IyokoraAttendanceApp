@@ -29,6 +29,7 @@ namespace IyokoraAttendanceApp
             builder.Services.AddSingleton<MemberService>();
             builder.Services.AddSingleton<PracticeService>();
             builder.Services.AddSingleton<AttendanceService>();
+            builder.Services.AddSingleton<PieceService>();
 
             // ViewModels
             builder.Services.AddTransient<OnboardingViewModel>();
@@ -36,6 +37,7 @@ namespace IyokoraAttendanceApp
             builder.Services.AddTransient<ScheduleViewModel>();
             builder.Services.AddTransient<PracticeDetailViewModel>();
             builder.Services.AddTransient<ProfileViewModel>();
+            builder.Services.AddTransient<PiecesViewModel>();
 
             // Views
             builder.Services.AddTransient<OnboardingPage>();
@@ -43,6 +45,7 @@ namespace IyokoraAttendanceApp
             builder.Services.AddTransient<SchedulePage>();
             builder.Services.AddTransient<PracticeDetailPage>();
             builder.Services.AddTransient<ProfilePage>();
+            builder.Services.AddTransient<PiecesPage>();
 
             // Shell
             builder.Services.AddSingleton<AppShell>();
