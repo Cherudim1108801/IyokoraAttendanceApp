@@ -30,7 +30,7 @@ public class MemberService(FirestoreClient client)
         var fields = new Dictionary<string, object?>
         {
             ["groupId"] = FirebaseOptions.GroupId,
-            ["name"] = name,
+            ["name"] = NameCipher.Encrypt(name),
             ["part"] = part.ToString(),
             ["updatedAt"] = DateTime.UtcNow
         };
@@ -40,7 +40,7 @@ public class MemberService(FirestoreClient client)
     private static Member ToMember(FirestoreDocument doc) => new()
     {
         Id = doc.Id,
-        Name = doc.GetString("name"),
+        Name = NameCipher.DecryptOrPlain(doc.GetString("name")),
         Part = Enum.TryParse<PartType>(doc.GetString("part"), out var part) ? part : PartType.Soprano,
         UpdatedAt = doc.GetDateTime("updatedAt")
     };
