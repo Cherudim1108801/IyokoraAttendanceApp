@@ -115,6 +115,7 @@ public partial class DashboardViewModel(MemberService memberService, PracticeSer
                     Part = part,
                     Label = part.ToDisplayName(),
                     Color = part.ToColor(),
+                    CardBackgroundColor = part.ToCardBackgroundColor(),
                     AttendingCount = attendingByPart.GetValueOrDefault(part),
                     MemberCount = membersByPart.GetValueOrDefault(part),
                     AttendeeNames = attendingNamesByPart.GetValueOrDefault(part) ?? []

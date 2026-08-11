@@ -32,6 +32,16 @@ public static class PartTypeExtensions
         _ => Colors.Gray
     };
 
+    /// <summary>ホーム画面のパート別カードの背景色を返す。</summary>
+    public static Color ToCardBackgroundColor(this PartType part) => part switch
+    {
+        PartType.Soprano => Color.FromArgb("#FFCCFF"),
+        PartType.Alto => Color.FromArgb("#FFFFCC"),
+        PartType.Tenor => Color.FromArgb("#CDFFCC"),
+        PartType.Bass => Color.FromArgb("#CAFFFF"),
+        _ => Colors.LightGray
+    };
+
     /// <summary>全パートを固定順（ソプラノ→アルト→テナー→ベース）で列挙する。</summary>
     public static readonly PartType[] All =
     [

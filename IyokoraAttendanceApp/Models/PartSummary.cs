@@ -6,6 +6,7 @@ public class PartSummary
     public required PartType Part { get; init; }
     public required string Label { get; init; }
     public required Color Color { get; init; }
+    public required Color CardBackgroundColor { get; init; }
     public int AttendingCount { get; init; }
     public int MemberCount { get; init; }
 
