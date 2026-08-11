@@ -7,11 +7,14 @@ using IyokoraAttendanceApp.Services;
 namespace IyokoraAttendanceApp.ViewModels;
 
 /// <summary>練習予定一覧画面用のViewModel。一覧の取得・追加・削除を担う。</summary>
-public partial class ScheduleViewModel(PracticeService practiceService) : BaseViewModel
+public partial class ScheduleViewModel(PracticeService practiceService, PieceService pieceService) : BaseViewModel
 {
     private bool _isLoading;
 
     public ObservableCollection<Practice> Practices { get; } = [];
+
+    /// <summary>練習予定登録フォームにおける、レパートリー曲の選択状態一覧。</summary>
+    public ObservableCollection<PieceSelectionInput> PieceInputs { get; } = [];
 
     /// <summary>練習予定の追加パネルを表示中かどうか。</summary>
     [ObservableProperty]
@@ -48,6 +51,11 @@ public partial class ScheduleViewModel(PracticeService practiceService) : BaseVi
             Practices.Clear();
             foreach (var practice in practices)
                 Practices.Add(practice);
+
+            var pieces = await pieceService.GetAllAsync();
+            PieceInputs.Clear();
+            foreach (var piece in pieces)
+                PieceInputs.Add(new PieceSelectionInput { PieceId = piece.Id, Title = piece.Title });
         }
         catch (Exception ex)
         {
@@ -69,7 +77,12 @@ public partial class ScheduleViewModel(PracticeService practiceService) : BaseVi
         ErrorMessage = null;
         try
         {
-            await practiceService.CreateAsync(NewDate, NewTitle.Trim(), NewPlace.Trim());
+            var selectedPieces = PieceInputs
+                .Where(p => p.IsSelected)
+                .Select(p => new PracticePieceRef { PieceId = p.PieceId, Title = p.Title })
+                .ToList();
+
+            await practiceService.CreateAsync(NewDate, NewTitle.Trim(), NewPlace.Trim(), selectedPieces);
             NewTitle = string.Empty;
             NewPlace = string.Empty;
             NewDate = DateTime.Today.AddDays(7);

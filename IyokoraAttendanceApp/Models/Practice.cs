@@ -15,6 +15,12 @@ public class Practice
     /// <summary>場所（任意）。</summary>
     public string Place { get; set; } = string.Empty;
 
+    /// <summary>この練習で演奏予定の曲。</summary>
+    public List<PracticePieceRef> Pieces { get; set; } = [];
+
     /// <summary>登録日時（UTC）。</summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>一覧表示用：演奏予定曲の曲名を読点区切りで結合した文字列。未選択の場合は空文字列。</summary>
+    public string PiecesSummary => string.Join("、", Pieces.Select(p => p.Title));
 }
