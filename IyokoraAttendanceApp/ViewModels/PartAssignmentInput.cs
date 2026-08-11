@@ -9,9 +9,11 @@ public partial class PartAssignmentInput : ObservableObject
     public required PartType Part { get; init; }
     public required string Label { get; init; }
 
+    /// <summary>この曲でパートを使用するかどうか。</summary>
     [ObservableProperty]
-    private bool isSelected;
+    public partial bool IsSelected { get; set; }
 
+    /// <summary>選択中の内部分割方式。</summary>
     [ObservableProperty]
-    private PartDivisionOption selectedDivision = PartDivisionOption.All[0];
+    public partial PartDivisionOption SelectedDivision { get; set; } = PartDivisionOption.All[0];
 }
