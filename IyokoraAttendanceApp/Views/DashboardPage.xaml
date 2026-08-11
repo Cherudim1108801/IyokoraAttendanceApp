@@ -61,14 +61,14 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:PartSummary">
                                 <Frame Padding="14" CornerRadius="14" BorderColor="Transparent"
-                                       BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
+                                       BackgroundColor="{Binding CardBackgroundColor}">
                                     <Frame.GestureRecognizers>
                                         <TapGestureRecognizer
                                             Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowPartDetailCommand}"
                                             CommandParameter="{Binding .}" />
                                     </Frame.GestureRecognizers>
                                     <VerticalStackLayout Spacing="2">
-                                        <Label Text="{Binding Label}" TextColor="{Binding Color}"
+                                        <Label Text="{Binding Label}" TextColor="{StaticResource Black}"
                                                FontAttributes="Bold" FontSize="14" />
                                         <Label Text="{Binding AttendingCount}" FontSize="40" FontAttributes="Bold" />
                                         <Label Text="{Binding CountLabel}" FontSize="12" TextColor="{StaticResource Gray500}" />
