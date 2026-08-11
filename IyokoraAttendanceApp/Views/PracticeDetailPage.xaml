@@ -20,6 +20,9 @@
                     <Label Text="{Binding Practice.Place, StringFormat='📍 {0}'}"
                            IsVisible="{Binding Practice.Place, Converter={StaticResource StringToBoolConverter}}"
                            TextColor="{StaticResource Gray500}" />
+                    <Label Text="{Binding Practice.PiecesSummary, StringFormat='🎵 {0}'}"
+                           IsVisible="{Binding Practice.PiecesSummary, Converter={StaticResource StringToBoolConverter}}"
+                           TextColor="{StaticResource Gray500}" />
                     <Label Text="{Binding AttendanceSummaryLabel}" />
                 </VerticalStackLayout>
 

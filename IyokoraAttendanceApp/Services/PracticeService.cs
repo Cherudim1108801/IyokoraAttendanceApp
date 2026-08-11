@@ -41,9 +41,10 @@ public class PracticeService(FirestoreClient client)
     /// <param name="date">練習日（時刻情報は無視される）。</param>
     /// <param name="title">タイトル（任意）。</param>
     /// <param name="place">場所（任意）。</param>
+    /// <param name="pieces">演奏予定曲。</param>
     /// <param name="ct">キャンセルトークン。</param>
     /// <returns>発行された練習予定ID。</returns>
-    public async Task<string> CreateAsync(DateTime date, string title, string place, CancellationToken ct = default)
+    public async Task<string> CreateAsync(DateTime date, string title, string place, IReadOnlyList<PracticePieceRef> pieces, CancellationToken ct = default)
     {
         var id = Guid.NewGuid().ToString("N");
         // 練習日は時刻を持たないカレンダー日付として扱う。DateTime.ToUniversalTime() による
@@ -55,6 +56,14 @@ public class PracticeService(FirestoreClient client)
             ["date"] = dateOnly,
             ["title"] = title,
             ["place"] = place,
+            ["pieces"] = pieces
+                .Select(p => new Dictionary<string, object?>
+                {
+                    ["pieceId"] = p.PieceId,
+                    ["title"] = p.Title
+                })
+                .Cast<object?>()
+                .ToList(),
             ["createdAt"] = DateTime.UtcNow
         };
         await client.UpsertDocumentAsync(Collection, id, fields, ct);
@@ -73,6 +82,16 @@ public class PracticeService(FirestoreClient client)
         Date = doc.GetDateTime("date"),
         Title = doc.GetString("title"),
         Place = doc.GetString("place"),
+        Pieces = doc.GetList("pieces")
+            .OfType<Dictionary<string, object?>>()
+            .Select(ToPieceRef)
+            .ToList(),
         CreatedAt = doc.GetDateTime("createdAt")
+    };
+
+    private static PracticePieceRef ToPieceRef(Dictionary<string, object?> fields) => new()
+    {
+        PieceId = fields.GetValueOrDefault("pieceId") as string ?? string.Empty,
+        Title = fields.GetValueOrDefault("title") as string ?? string.Empty
     };
 }
