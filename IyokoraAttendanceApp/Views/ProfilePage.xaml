@@ -19,6 +19,24 @@
                 ItemDisplayBinding="{Binding Label}"
                 SelectedItem="{Binding SelectedPart}" />
 
+            <Label Text="曲ごとのパート担当" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Label Text="所属パートに内部分割（上・下など）が設定されている曲のみ表示されます。" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Label Text="該当する曲はありません。" FontSize="12" TextColor="{StaticResource Gray500}"
+                   IsVisible="{Binding PiecePartInputs.Count, Converter={StaticResource IntToBoolConverter}, ConverterParameter=Invert}" />
+
+            <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding PiecePartInputs}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PiecePartSelectionInput">
+                        <Grid ColumnDefinitions="*,Auto" Padding="0,6" ColumnSpacing="8">
+                            <Label Text="{Binding PieceTitle}" VerticalOptions="Center" />
+                            <Picker Grid.Column="1" WidthRequest="140"
+                                    ItemsSource="{Binding SubPartOptions}"
+                                    SelectedItem="{Binding SelectedSubPart}" />
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
             <Label
                 Text="{Binding ErrorMessage}"
                 TextColor="{StaticResource Magenta}"

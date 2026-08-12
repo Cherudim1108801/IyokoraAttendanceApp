@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IyokoraAttendanceApp.Models;
@@ -5,10 +6,15 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-/// <summary>プロフィール画面用のViewModel。自分の名前・パートの編集とプロフィール切り替えを担う。</summary>
-public partial class ProfileViewModel(MemberService memberService, LocalProfileStore profile) : BaseViewModel
+/// <summary>プロフィール画面用のViewModel。自分の名前・パート・曲ごとの内部パート担当の編集とプロフィール切り替えを担う。</summary>
+public partial class ProfileViewModel(MemberService memberService, PieceService pieceService, LocalProfileStore profile) : BaseViewModel
 {
+    private List<Piece> _pieces = [];
+
     public List<PartOption> PartOptions { get; } = PartOption.All;
+
+    /// <summary>所属パートで内部分割が設定されている曲の、パート担当選択一覧。</summary>
+    public ObservableCollection<PiecePartSelectionInput> PiecePartInputs { get; } = [];
 
     /// <summary>編集中の表示名。</summary>
     [ObservableProperty]
@@ -21,6 +27,50 @@ public partial class ProfileViewModel(MemberService memberService, LocalProfileS
     /// <summary>保存完了メッセージ。未保存または保存操作前は null。</summary>
     [ObservableProperty]
     public partial string? SavedMessage { get; set; }
+
+    partial void OnSelectedPartChanged(PartOption value) => BuildPiecePartInputs();
+
+    /// <summary>曲一覧を読み込み、所属パートに応じたパート担当選択一覧を構築する。</summary>
+    [RelayCommand]
+    public async Task LoadAsync()
+    {
+        IsBusy = true;
+        ErrorMessage = null;
+        try
+        {
+            _pieces = await pieceService.GetAllAsync();
+            BuildPiecePartInputs();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"読み込みに失敗しました。({ex.Message})";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void BuildPiecePartInputs()
+    {
+        var savedParts = profile.PieceParts.ToDictionary(p => p.PieceId, p => p.SubPart);
+
+        PiecePartInputs.Clear();
+        foreach (var piece in _pieces)
+        {
+            var assignment = piece.PartAssignments.FirstOrDefault(a => a.Part == SelectedPart.Part);
+            if (assignment is null || assignment.Division == PartDivision.None)
+                continue;
+
+            PiecePartInputs.Add(new PiecePartSelectionInput
+            {
+                PieceId = piece.Id,
+                PieceTitle = piece.Title,
+                SubPartOptions = [.. assignment.SubPartLabels],
+                SelectedSubPart = savedParts.GetValueOrDefault(piece.Id)
+            });
+        }
+    }
 
     [RelayCommand]
     private async Task SaveAsync()
@@ -37,9 +87,15 @@ public partial class ProfileViewModel(MemberService memberService, LocalProfileS
         SavedMessage = null;
         try
         {
+            var pieceParts = PiecePartInputs
+                .Where(p => !string.IsNullOrEmpty(p.SelectedSubPart))
+                .Select(p => new MemberPiecePart { PieceId = p.PieceId, SubPart = p.SelectedSubPart! })
+                .ToList();
+
             profile.Name = trimmedName;
             profile.Part = SelectedPart.Part;
-            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part);
+            profile.PieceParts = pieceParts;
+            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, pieceParts);
             SavedMessage = "保存しました。";
         }
         catch (Exception ex)
