@@ -12,6 +12,9 @@ public class Member
     /// <summary>所属パート。</summary>
     public required PartType Part { get; set; }
 
+    /// <summary>曲ごとの内部パート（分割）担当。</summary>
+    public List<MemberPiecePart> PieceParts { get; set; } = [];
+
     /// <summary>最終更新日時（UTC）。</summary>
     public DateTime UpdatedAt { get; set; }
 }
