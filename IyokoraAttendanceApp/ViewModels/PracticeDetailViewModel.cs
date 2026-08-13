@@ -6,13 +6,20 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-/// <summary>練習詳細画面用のViewModel。指定練習のパート別出欠一覧を表示する。</summary>
+/// <summary>練習詳細画面用のViewModel。指定練習のパート別参加人数と、曲ごとの参加者内訳を表示する。</summary>
 [QueryProperty(nameof(PracticeId), "practiceId")]
-public partial class PracticeDetailViewModel(PracticeService practiceService, MemberService memberService, AttendanceService attendanceService, LocalProfileStore profile) : BaseViewModel
+public partial class PracticeDetailViewModel(
+    PracticeService practiceService,
+    MemberService memberService,
+    AttendanceService attendanceService,
+    PieceService pieceService,
+    LocalProfileStore profile) : BaseViewModel
 {
     private bool _isLoading;
 
-    public ObservableCollection<PartGroup> PartGroups { get; } = [];
+    public ObservableCollection<PartSummary> PartSummaries { get; } = [];
+
+    public ObservableCollection<SongParticipation> SongParticipations { get; } = [];
 
     /// <summary>表示対象の練習予定ID（ナビゲーションのクエリパラメータ <c>practiceId</c> から設定される）。</summary>
     [ObservableProperty]
@@ -33,6 +40,18 @@ public partial class PracticeDetailViewModel(PracticeService practiceService, Me
     /// <summary>登録メンバーの総数。</summary>
     [ObservableProperty]
     public partial int TotalMembers { get; set; }
+
+    /// <summary>演奏予定曲ごとの参加者内訳が1件以上あるかどうか。</summary>
+    [ObservableProperty]
+    public partial bool HasSongParticipations { get; set; }
+
+    /// <summary>パート詳細モーダルで表示中のパート集計。表示していない場合は null。</summary>
+    [ObservableProperty]
+    public partial PartSummary? SelectedPartSummary { get; set; }
+
+    /// <summary>パート詳細モーダルを表示中かどうか。</summary>
+    [ObservableProperty]
+    public partial bool IsPartModalVisible { get; set; }
 
     public bool IsAttendingSelected => MyStatus == AttendanceStatus.Attending;
     public bool IsNotAttendingSelected => MyStatus == AttendanceStatus.NotAttending;
@@ -56,7 +75,7 @@ public partial class PracticeDetailViewModel(PracticeService practiceService, Me
             _ = LoadAsync();
     }
 
-    /// <summary>対象練習の情報と、パート別の出欠一覧を読み込む。</summary>
+    /// <summary>対象練習の情報、パート別参加人数、曲ごとの参加者内訳を読み込む。</summary>
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -65,7 +84,7 @@ public partial class PracticeDetailViewModel(PracticeService practiceService, Me
 
         // RefreshView は IsRefreshing (= IsBusy) が true になると、発生源を問わず
         // 自動で Command (LoadCommand) を実行する。SetMyStatusAsync からの呼び出しと
-        // 重なると多重実行され、PartGroups に重複した項目が追加されてしまうため、
+        // 重なると多重実行され、各コレクションに重複した項目が追加されてしまうため、
         // 多重実行を防ぐ。
         if (_isLoading)
             return;
@@ -77,6 +96,7 @@ public partial class PracticeDetailViewModel(PracticeService practiceService, Me
         {
             Practice = await practiceService.GetByIdAsync(PracticeId);
             var members = await memberService.GetAllAsync();
+            var pieces = await pieceService.GetAllAsync();
             var attendances = await attendanceService.GetForPracticeAsync(PracticeId);
             var statusByMemberId = attendances.ToDictionary(a => a.MemberId, a => a.Status);
 
@@ -84,30 +104,84 @@ public partial class PracticeDetailViewModel(PracticeService practiceService, Me
             TotalMembers = members.Count;
             TotalAttending = attendances.Count(a => a.Status == AttendanceStatus.Attending);
 
-            PartGroups.Clear();
+            var attendingByPart = attendances
+                .Where(a => a.Status == AttendanceStatus.Attending)
+                .GroupBy(a => a.Part)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var attendingNamesByPart = attendances
+                .Where(a => a.Status == AttendanceStatus.Attending)
+                .GroupBy(a => a.Part)
+                .ToDictionary(
+                    g => g.Key,
+                    g => (IReadOnlyList<string>)g.Select(a => a.MemberName).OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase).ToList());
+
+            var membersByPart = members.GroupBy(m => m.Part).ToDictionary(g => g.Key, g => g.Count());
+
+            PartSummaries.Clear();
             foreach (var part in PartTypeExtensions.All)
             {
-                var partMembers = members.Where(m => m.Part == part).ToList();
-                var attendees = partMembers
-                    .Select(m => new AttendeeItem
-                    {
-                        MemberId = m.Id,
-                        Name = m.Name,
-                        Status = statusByMemberId.GetValueOrDefault(m.Id, AttendanceStatus.Undecided)
-                    })
-                    .OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase)
-                    .ToList();
-
-                PartGroups.Add(new PartGroup
+                PartSummaries.Add(new PartSummary
                 {
                     Part = part,
                     Label = part.ToDisplayName(),
                     Color = part.ToColor(),
-                    AttendingCount = attendees.Count(a => a.Status == AttendanceStatus.Attending),
-                    TotalCount = partMembers.Count,
-                    Attendees = attendees
+                    CardBackgroundColor = part.ToCardBackgroundColor(),
+                    AttendingCount = attendingByPart.GetValueOrDefault(part),
+                    MemberCount = membersByPart.GetValueOrDefault(part),
+                    AttendeeNames = attendingNamesByPart.GetValueOrDefault(part) ?? []
                 });
             }
+
+            var attendingMembers = members
+                .Where(m => statusByMemberId.GetValueOrDefault(m.Id) == AttendanceStatus.Attending)
+                .OrderBy(m => m.Part)
+                .ThenBy(m => m.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+
+            var piecesById = pieces.ToDictionary(p => p.Id);
+
+            SongParticipations.Clear();
+            foreach (var pieceRef in Practice?.Pieces ?? [])
+            {
+                piecesById.TryGetValue(pieceRef.PieceId, out var piece);
+
+                var dots = new List<ParticipationDot>();
+                PartType? previousPart = null;
+                foreach (var member in attendingMembers)
+                {
+                    var assignment = piece?.PartAssignments.FirstOrDefault(a => a.Part == member.Part);
+                    string? subLabel = null;
+                    if (assignment is { Division: PartDivision.UpperLower })
+                    {
+                        var subPart = member.PieceParts.FirstOrDefault(p => p.PieceId == pieceRef.PieceId)?.SubPart;
+                        var labels = assignment.SubPartLabels;
+                        if (subPart == labels[0])
+                            subLabel = "上";
+                        else if (subPart == labels[1])
+                            subLabel = "下";
+                    }
+
+                    dots.Add(new ParticipationDot
+                    {
+                        Color = member.Part.ToCardBackgroundColor(),
+                        SubLabel = subLabel,
+                        Margin = previousPart is not null && previousPart != member.Part
+                            ? new Thickness(14, 4, 4, 4)
+                            : new Thickness(4)
+                    });
+                    previousPart = member.Part;
+                }
+
+                SongParticipations.Add(new SongParticipation
+                {
+                    PieceId = pieceRef.PieceId,
+                    Title = pieceRef.Title,
+                    Dots = dots
+                });
+            }
+
+            HasSongParticipations = SongParticipations.Count > 0;
         }
         catch (Exception ex)
         {
@@ -136,4 +210,14 @@ public partial class PracticeDetailViewModel(PracticeService practiceService, Me
             ErrorMessage = $"更新に失敗しました。({ex.Message})";
         }
     }
+
+    [RelayCommand]
+    private void ShowPartDetail(PartSummary summary)
+    {
+        SelectedPartSummary = summary;
+        IsPartModalVisible = true;
+    }
+
+    [RelayCommand]
+    private void ClosePartModal() => IsPartModalVisible = false;
 }
