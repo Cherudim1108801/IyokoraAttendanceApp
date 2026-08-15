@@ -6,12 +6,15 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-/// <summary>練習曲（レパートリー）一覧画面用のViewModel。一覧の取得・追加・削除を担う。</summary>
-public partial class PiecesViewModel(PieceService pieceService) : BaseViewModel
+/// <summary>練習曲（レパートリー）一覧画面用のViewModel。一覧の取得・追加・削除を担う。追加・削除は管理者のみ行える。</summary>
+public partial class PiecesViewModel(PieceService pieceService, LocalProfileStore profile) : BaseViewModel
 {
     private bool _isLoading;
 
     public ObservableCollection<Piece> Pieces { get; } = [];
+
+    /// <summary>操作中の利用者が管理者かどうか。曲の追加・削除の可否に使用する。</summary>
+    public bool IsAdmin => profile.Role == Role.Admin;
 
     /// <summary>曲登録フォームにおける、基本4パートそれぞれの割り振り入力状態。</summary>
     public ObservableCollection<PartAssignmentInput> PartInputs { get; } =
@@ -62,6 +65,9 @@ public partial class PiecesViewModel(PieceService pieceService) : BaseViewModel
     [RelayCommand]
     private async Task AddPieceAsync()
     {
+        if (!IsAdmin)
+            return;
+
         var trimmedTitle = NewTitle.Trim();
         if (string.IsNullOrEmpty(trimmedTitle))
         {
@@ -97,6 +103,9 @@ public partial class PiecesViewModel(PieceService pieceService) : BaseViewModel
     [RelayCommand]
     private async Task DeletePieceAsync(Piece piece)
     {
+        if (!IsAdmin)
+            return;
+
         try
         {
             await pieceService.DeleteAsync(piece.Id);
