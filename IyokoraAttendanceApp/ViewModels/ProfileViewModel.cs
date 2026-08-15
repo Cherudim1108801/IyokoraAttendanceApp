@@ -13,6 +13,8 @@ public partial class ProfileViewModel(MemberService memberService, PieceService 
 
     public List<PartOption> PartOptions { get; } = PartOption.All;
 
+    public List<RoleOption> RoleOptions { get; } = RoleOption.All;
+
     /// <summary>所属パートで内部分割が設定されている曲の、パート担当選択一覧。</summary>
     public ObservableCollection<PiecePartSelectionInput> PiecePartInputs { get; } = [];
 
@@ -23,6 +25,10 @@ public partial class ProfileViewModel(MemberService memberService, PieceService 
     /// <summary>選択中のパート。</summary>
     [ObservableProperty]
     public partial PartOption SelectedPart { get; set; } = PartOption.All.First(p => p.Part == profile.Part);
+
+    /// <summary>選択中の役割。</summary>
+    [ObservableProperty]
+    public partial RoleOption SelectedRole { get; set; } = RoleOption.All.First(r => r.Role == profile.Role);
 
     /// <summary>保存完了メッセージ。未保存または保存操作前は null。</summary>
     [ObservableProperty]
@@ -94,8 +100,9 @@ public partial class ProfileViewModel(MemberService memberService, PieceService 
 
             profile.Name = trimmedName;
             profile.Part = SelectedPart.Part;
+            profile.Role = SelectedRole.Role;
             profile.PieceParts = pieceParts;
-            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, pieceParts);
+            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, SelectedRole.Role, pieceParts);
             SavedMessage = "保存しました。";
         }
         catch (Exception ex)

@@ -36,7 +36,7 @@ public partial class OnboardingViewModel(MemberService memberService, LocalProfi
         {
             profile.Name = trimmedName;
             profile.Part = SelectedPart.Part;
-            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, []);
+            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, profile.Role, []);
 
             if (Shell.Current is not null)
                 await Shell.Current.GoToAsync("//home");

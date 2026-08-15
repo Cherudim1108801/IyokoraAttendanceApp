@@ -20,19 +20,21 @@ public class MemberService(FirestoreClient client)
             .ToList();
     }
 
-    /// <summary>メンバーの名前・パート・曲ごとの内部パート担当を新規登録または更新する。</summary>
+    /// <summary>メンバーの名前・パート・役割・曲ごとの内部パート担当を新規登録または更新する。</summary>
     /// <param name="memberId">端末で発行された MemberId。</param>
     /// <param name="name">表示名。</param>
     /// <param name="part">所属パート。</param>
+    /// <param name="role">役割（管理者／一般団員）。</param>
     /// <param name="pieceParts">曲ごとの内部パート（分割）担当。</param>
     /// <param name="ct">キャンセルトークン。</param>
-    public Task SaveAsync(string memberId, string name, PartType part, IReadOnlyList<MemberPiecePart> pieceParts, CancellationToken ct = default)
+    public Task SaveAsync(string memberId, string name, PartType part, Role role, IReadOnlyList<MemberPiecePart> pieceParts, CancellationToken ct = default)
     {
         var fields = new Dictionary<string, object?>
         {
             ["groupId"] = FirebaseOptions.GroupId,
             ["name"] = NameCipher.Encrypt(name),
             ["part"] = part.ToString(),
+            ["role"] = role.ToString(),
             ["pieceParts"] = pieceParts
                 .Select(p => new Dictionary<string, object?>
                 {
@@ -51,6 +53,7 @@ public class MemberService(FirestoreClient client)
         Id = doc.Id,
         Name = NameCipher.DecryptOrPlain(doc.GetString("name")),
         Part = Enum.TryParse<PartType>(doc.GetString("part"), out var part) ? part : PartType.Soprano,
+        Role = Enum.TryParse<Role>(doc.GetString("role"), out var role) ? role : Role.GeneralMember,
         PieceParts = doc.GetList("pieceParts")
             .OfType<Dictionary<string, object?>>()
             .Select(ToPiecePart)

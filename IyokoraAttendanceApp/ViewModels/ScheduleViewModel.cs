@@ -6,12 +6,15 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-/// <summary>練習予定一覧画面用のViewModel。一覧の取得・追加・削除を担う。</summary>
-public partial class ScheduleViewModel(PracticeService practiceService, PieceService pieceService) : BaseViewModel
+/// <summary>練習予定一覧画面用のViewModel。一覧の取得・追加・削除を担う。追加・削除は管理者のみ行える。</summary>
+public partial class ScheduleViewModel(PracticeService practiceService, PieceService pieceService, LocalProfileStore profile) : BaseViewModel
 {
     private bool _isLoading;
 
     public ObservableCollection<Practice> Practices { get; } = [];
+
+    /// <summary>操作中の利用者が管理者かどうか。練習予定の追加・削除の可否に使用する。</summary>
+    public bool IsAdmin => profile.Role == Role.Admin;
 
     /// <summary>練習予定登録フォームにおける、レパートリー曲の選択状態一覧。</summary>
     public ObservableCollection<PieceSelectionInput> PieceInputs { get; } = [];
@@ -74,6 +77,9 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
     [RelayCommand]
     private async Task AddPracticeAsync()
     {
+        if (!IsAdmin)
+            return;
+
         ErrorMessage = null;
         try
         {
@@ -98,6 +104,9 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
     [RelayCommand]
     private async Task DeletePracticeAsync(Practice practice)
     {
+        if (!IsAdmin)
+            return;
+
         try
         {
             await practiceService.DeleteAsync(practice.Id);
