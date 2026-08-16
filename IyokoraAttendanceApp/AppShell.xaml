@@ -19,6 +19,11 @@
             ContentTemplate="{DataTemplate views:SchedulePage}" />
 
         <ShellContent
+            Title="履歴"
+            Route="history"
+            ContentTemplate="{DataTemplate views:PracticeHistoryPage}" />
+
+        <ShellContent
             Title="曲"
             Route="pieces"
             ContentTemplate="{DataTemplate views:PiecesPage}" />
