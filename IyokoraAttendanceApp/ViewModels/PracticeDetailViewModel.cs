@@ -45,6 +45,10 @@ public partial class PracticeDetailViewModel(
     [ObservableProperty]
     public partial bool HasSongParticipations { get; set; }
 
+    /// <summary>自分の出欠を変更できるかどうか。過去の練習（今日より前）は読み取り専用とする。</summary>
+    [ObservableProperty]
+    public partial bool IsAttendanceEditable { get; set; } = true;
+
     /// <summary>パート詳細モーダルで表示中のパート集計。表示していない場合は null。</summary>
     [ObservableProperty]
     public partial PartSummary? SelectedPartSummary { get; set; }
@@ -95,6 +99,7 @@ public partial class PracticeDetailViewModel(
         try
         {
             Practice = await practiceService.GetByIdAsync(PracticeId);
+            IsAttendanceEditable = Practice is null || Practice.Date.Date >= DateTime.Today;
             var members = await memberService.GetAllAsync();
             var pieces = await pieceService.GetAllAsync();
             var attendances = await attendanceService.GetForPracticeAsync(PracticeId);
@@ -197,7 +202,7 @@ public partial class PracticeDetailViewModel(
     [RelayCommand]
     private async Task SetMyStatusAsync(AttendanceStatus status)
     {
-        if (Practice is null)
+        if (Practice is null || !IsAttendanceEditable)
             return;
 
         try

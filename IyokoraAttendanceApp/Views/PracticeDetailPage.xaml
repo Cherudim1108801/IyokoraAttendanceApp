@@ -36,7 +36,9 @@
                 <!-- 自分の出欠 -->
                 <VerticalStackLayout Spacing="10">
                     <Label Text="あなたの出欠" FontSize="16" FontAttributes="Bold" />
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Label Text="過去の練習のため、出欠は変更できません。" FontSize="12" TextColor="{StaticResource Gray500}"
+                           IsVisible="{Binding IsAttendanceEditable, Converter={StaticResource InvertedBoolConverter}}" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8" IsEnabled="{Binding IsAttendanceEditable}">
                         <Button Text="参加"
                                 Command="{Binding SetMyStatusCommand}" CommandParameter="{x:Static models:AttendanceStatus.Attending}"
                                 BackgroundColor="{StaticResource Gray300}" TextColor="{StaticResource Black}">

@@ -6,7 +6,7 @@ using IyokoraAttendanceApp.Services;
 
 namespace IyokoraAttendanceApp.ViewModels;
 
-/// <summary>練習予定一覧画面用のViewModel。一覧の取得・追加・削除を担う。追加・削除は管理者のみ行える。</summary>
+/// <summary>練習予定一覧画面用のViewModel。今日以降の練習予定一覧の取得・追加・削除を担う。追加・削除は管理者のみ行える。過去の練習は「履歴」タブで確認する。</summary>
 public partial class ScheduleViewModel(PracticeService practiceService, PieceService pieceService, LocalProfileStore profile) : BaseViewModel
 {
     private bool _isLoading;
@@ -50,7 +50,7 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
         ErrorMessage = null;
         try
         {
-            var practices = await practiceService.GetAllAsync();
+            var practices = await practiceService.GetUpcomingAsync();
             Practices.Clear();
             foreach (var practice in practices)
                 Practices.Add(practice);

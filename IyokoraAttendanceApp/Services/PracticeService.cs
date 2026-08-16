@@ -28,13 +28,30 @@ public class PracticeService(FirestoreClient client)
         return doc is null ? null : ToPractice(doc);
     }
 
+    /// <summary>今日以降の練習予定を、日付の古い順に取得する。</summary>
+    /// <param name="ct">キャンセルトークン。</param>
+    public async Task<List<Practice>> GetUpcomingAsync(CancellationToken ct = default)
+    {
+        var all = await GetAllAsync(ct);
+        var today = DateTime.Today;
+        return all.Where(p => p.Date.Date >= today).OrderBy(p => p.Date).ToList();
+    }
+
+    /// <summary>今日より前の練習予定（過去の練習データ）を、日付の新しい順に取得する。</summary>
+    /// <param name="ct">キャンセルトークン。</param>
+    public async Task<List<Practice>> GetPastAsync(CancellationToken ct = default)
+    {
+        var all = await GetAllAsync(ct);
+        var today = DateTime.Today;
+        return all.Where(p => p.Date.Date < today).OrderByDescending(p => p.Date).ToList();
+    }
+
     /// <summary>今日以降で最も近い練習予定を取得する。存在しない場合は null。</summary>
     /// <param name="ct">キャンセルトークン。</param>
     public async Task<Practice?> GetNextUpcomingAsync(CancellationToken ct = default)
     {
-        var all = await GetAllAsync(ct);
-        var today = DateTime.Today;
-        return all.Where(p => p.Date.Date >= today).OrderBy(p => p.Date).FirstOrDefault();
+        var upcoming = await GetUpcomingAsync(ct);
+        return upcoming.FirstOrDefault();
     }
 
     /// <summary>新しい練習予定を登録する。</summary>
