@@ -126,6 +126,24 @@
                                             </DataTemplate>
                                         </BindableLayout.ItemTemplate>
                                     </FlexLayout>
+
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Label Text="🎵 録音を聴く" FontSize="13" TextColor="{StaticResource Primary}"
+                                               IsVisible="{Binding HasRecordingUrl}">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenRecordingCommand}"
+                                                    CommandParameter="{Binding .}" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                        <Label Grid.Column="0" Text="録音リンク未登録" FontSize="12" TextColor="{StaticResource Gray500}"
+                                               IsVisible="{Binding HasRecordingUrl, Converter={StaticResource InvertedBoolConverter}}" />
+                                        <Button Grid.Column="1" Text="編集" FontSize="12"
+                                                BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
+                                                IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditRecordingCommand}"
+                                                CommandParameter="{Binding .}" />
+                                    </Grid>
                                 </VerticalStackLayout>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>

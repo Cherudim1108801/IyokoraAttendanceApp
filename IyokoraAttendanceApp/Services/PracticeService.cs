@@ -73,14 +73,7 @@ public class PracticeService(FirestoreClient client)
             ["date"] = dateOnly,
             ["title"] = title,
             ["place"] = place,
-            ["pieces"] = pieces
-                .Select(p => new Dictionary<string, object?>
-                {
-                    ["pieceId"] = p.PieceId,
-                    ["title"] = p.Title
-                })
-                .Cast<object?>()
-                .ToList(),
+            ["pieces"] = ToPieceFields(pieces),
             ["createdAt"] = DateTime.UtcNow
         };
         await client.UpsertDocumentAsync(Collection, id, fields, ct);
@@ -92,6 +85,40 @@ public class PracticeService(FirestoreClient client)
     /// <param name="ct">キャンセルトークン。</param>
     public Task DeleteAsync(string practiceId, CancellationToken ct = default) =>
         client.DeleteDocumentAsync(Collection, practiceId, ct);
+
+    /// <summary>指定の練習における、指定の曲の録音音源リンクを設定・変更・削除する。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="pieceId">対象の曲ID。</param>
+    /// <param name="recordingUrl">録音音源へのリンク（OneDriveなど）。削除する場合は null。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    public async Task SetPieceRecordingUrlAsync(string practiceId, string pieceId, string? recordingUrl, CancellationToken ct = default)
+    {
+        var practice = await GetByIdAsync(practiceId, ct);
+        if (practice is null)
+            return;
+
+        var updatedPieces = practice.Pieces
+            .Select(p => p.PieceId == pieceId
+                ? new PracticePieceRef { PieceId = p.PieceId, Title = p.Title, RecordingUrl = recordingUrl }
+                : p)
+            .ToList();
+
+        var fields = new Dictionary<string, object?>
+        {
+            ["pieces"] = ToPieceFields(updatedPieces)
+        };
+        await client.UpsertDocumentAsync(Collection, practiceId, fields, ct);
+    }
+
+    private static List<object?> ToPieceFields(IReadOnlyList<PracticePieceRef> pieces) => pieces
+        .Select(p => new Dictionary<string, object?>
+        {
+            ["pieceId"] = p.PieceId,
+            ["title"] = p.Title,
+            ["recordingUrl"] = p.RecordingUrl
+        })
+        .Cast<object?>()
+        .ToList();
 
     private static Practice ToPractice(FirestoreDocument doc) => new()
     {
@@ -109,6 +136,7 @@ public class PracticeService(FirestoreClient client)
     private static PracticePieceRef ToPieceRef(Dictionary<string, object?> fields) => new()
     {
         PieceId = fields.GetValueOrDefault("pieceId") as string ?? string.Empty,
-        Title = fields.GetValueOrDefault("title") as string ?? string.Empty
+        Title = fields.GetValueOrDefault("title") as string ?? string.Empty,
+        RecordingUrl = fields.GetValueOrDefault("recordingUrl") as string
     };
 }
