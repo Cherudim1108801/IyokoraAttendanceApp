@@ -21,6 +21,9 @@ public partial class PracticeDetailViewModel(
 
     public ObservableCollection<SongParticipation> SongParticipations { get; } = [];
 
+    /// <summary>操作中の利用者が管理者かどうか。録音音源リンクの追加・編集・削除の可否に使用する。</summary>
+    public bool IsAdmin => profile.Role == Role.Admin;
+
     /// <summary>表示対象の練習予定ID（ナビゲーションのクエリパラメータ <c>practiceId</c> から設定される）。</summary>
     [ObservableProperty]
     public partial string PracticeId { get; set; } = string.Empty;
@@ -182,7 +185,8 @@ public partial class PracticeDetailViewModel(
                 {
                     PieceId = pieceRef.PieceId,
                     Title = pieceRef.Title,
-                    Dots = dots
+                    Dots = dots,
+                    RecordingUrl = pieceRef.RecordingUrl
                 });
             }
 
@@ -225,4 +229,59 @@ public partial class PracticeDetailViewModel(
 
     [RelayCommand]
     private void ClosePartModal() => IsPartModalVisible = false;
+
+    [RelayCommand]
+    private async Task OpenRecordingAsync(SongParticipation song)
+    {
+        if (!song.HasRecordingUrl)
+            return;
+
+        try
+        {
+            await Launcher.Default.OpenAsync(song.RecordingUrl!);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"リンクを開けませんでした。({ex.Message})";
+        }
+    }
+
+    [RelayCommand]
+    private async Task EditRecordingAsync(SongParticipation song)
+    {
+        if (!IsAdmin || Practice is null)
+            return;
+
+        var currentPage = Shell.Current?.CurrentPage;
+        if (currentPage is null)
+            return;
+
+        var input = await currentPage.DisplayPromptAsync(
+            $"{song.Title} の録音リンク",
+            "OneDriveの共有リンクを入力してください。空欄で保存するとリンクを削除します。",
+            "保存", "キャンセル",
+            initialValue: song.RecordingUrl ?? "",
+            keyboard: Keyboard.Url);
+
+        if (input is null)
+            return;
+
+        var trimmed = input.Trim();
+        if (trimmed.Length > 0 && !Uri.TryCreate(trimmed, UriKind.Absolute, out _))
+        {
+            ErrorMessage = "リンクの形式が正しくありません。";
+            return;
+        }
+
+        try
+        {
+            await practiceService.SetPieceRecordingUrlAsync(Practice.Id, song.PieceId, trimmed.Length > 0 ? trimmed : null);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"録音リンクの保存に失敗しました。({ex.Message})";
+        }
+    }
+
 }

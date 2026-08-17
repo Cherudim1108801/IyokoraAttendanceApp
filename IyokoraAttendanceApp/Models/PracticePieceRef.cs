@@ -5,4 +5,7 @@ public class PracticePieceRef
 {
     public required string PieceId { get; init; }
     public required string Title { get; init; }
+
+    /// <summary>この練習でのこの曲の録音音源へのリンク（OneDriveなど）。未登録の場合は null。</summary>
+    public string? RecordingUrl { get; init; }
 }

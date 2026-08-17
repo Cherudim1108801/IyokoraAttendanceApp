@@ -6,6 +6,12 @@ public class SongParticipation
     public required string PieceId { get; init; }
     public required string Title { get; init; }
     public required List<ParticipationDot> Dots { get; init; }
+
+    /// <summary>この練習におけるこの曲の録音音源へのリンク（OneDriveなど）。未登録の場合は null。</summary>
+    public string? RecordingUrl { get; init; }
+
+    /// <summary>録音音源へのリンクが登録済みかどうか。</summary>
+    public bool HasRecordingUrl => !string.IsNullOrEmpty(RecordingUrl);
 }
 
 /// <summary>参加者1人分を表す○1個分の表示データ。</summary>
