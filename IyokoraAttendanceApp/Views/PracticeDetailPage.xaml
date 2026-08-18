@@ -127,8 +127,11 @@
                                         </BindableLayout.ItemTemplate>
                                     </FlexLayout>
 
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                        <Label Text="🎵 録音を聴く" FontSize="13" TextColor="{StaticResource Primary}"
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+                                        <Label Grid.Column="0" Text="★" TextColor="#F5A623" FontSize="14"
+                                               VerticalOptions="Center"
+                                               IsVisible="{Binding IsFeatured}" />
+                                        <Label Grid.Column="1" Text="🎵 録音を聴く" FontSize="13" TextColor="{StaticResource Primary}"
                                                IsVisible="{Binding HasRecordingUrl}">
                                             <Label.GestureRecognizers>
                                                 <TapGestureRecognizer
@@ -136,9 +139,22 @@
                                                     CommandParameter="{Binding .}" />
                                             </Label.GestureRecognizers>
                                         </Label>
-                                        <Label Grid.Column="0" Text="録音リンク未登録" FontSize="12" TextColor="{StaticResource Gray500}"
+                                        <Label Grid.Column="1" Text="録音リンク未登録" FontSize="12" TextColor="{StaticResource Gray500}"
                                                IsVisible="{Binding HasRecordingUrl, Converter={StaticResource InvertedBoolConverter}}" />
-                                        <Button Grid.Column="1" Text="編集" FontSize="12"
+                                        <HorizontalStackLayout Grid.Column="2"
+                                                IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}">
+                                            <Button Text="★ 注目に設定" FontSize="12"
+                                                    BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
+                                                    IsVisible="{Binding CanToggleFeaturedOn}"
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleRecordingFeaturedCommand}"
+                                                    CommandParameter="{Binding .}" />
+                                            <Button Text="★ 注目解除" FontSize="12"
+                                                    BackgroundColor="Transparent" TextColor="#F5A623"
+                                                    IsVisible="{Binding CanToggleFeaturedOff}"
+                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleRecordingFeaturedCommand}"
+                                                    CommandParameter="{Binding .}" />
+                                        </HorizontalStackLayout>
+                                        <Button Grid.Column="3" Text="編集" FontSize="12"
                                                 BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
                                                 IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
                                                 Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditRecordingCommand}"
