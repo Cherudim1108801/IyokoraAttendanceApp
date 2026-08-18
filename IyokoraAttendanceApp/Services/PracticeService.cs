@@ -99,7 +99,31 @@ public class PracticeService(FirestoreClient client)
 
         var updatedPieces = practice.Pieces
             .Select(p => p.PieceId == pieceId
-                ? new PracticePieceRef { PieceId = p.PieceId, Title = p.Title, RecordingUrl = recordingUrl }
+                ? new PracticePieceRef { PieceId = p.PieceId, Title = p.Title, RecordingUrl = recordingUrl, IsFeatured = p.IsFeatured }
+                : p)
+            .ToList();
+
+        var fields = new Dictionary<string, object?>
+        {
+            ["pieces"] = ToPieceFields(updatedPieces)
+        };
+        await client.UpsertDocumentAsync(Collection, practiceId, fields, ct);
+    }
+
+    /// <summary>指定の練習における、指定の曲の録音を「音源」タブで強調表示（ピン留め）するかどうかを設定する。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="pieceId">対象の曲ID。</param>
+    /// <param name="isFeatured">強調表示するかどうか。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    public async Task SetPieceRecordingFeaturedAsync(string practiceId, string pieceId, bool isFeatured, CancellationToken ct = default)
+    {
+        var practice = await GetByIdAsync(practiceId, ct);
+        if (practice is null)
+            return;
+
+        var updatedPieces = practice.Pieces
+            .Select(p => p.PieceId == pieceId
+                ? new PracticePieceRef { PieceId = p.PieceId, Title = p.Title, RecordingUrl = p.RecordingUrl, IsFeatured = isFeatured }
                 : p)
             .ToList();
 
@@ -115,7 +139,8 @@ public class PracticeService(FirestoreClient client)
         {
             ["pieceId"] = p.PieceId,
             ["title"] = p.Title,
-            ["recordingUrl"] = p.RecordingUrl
+            ["recordingUrl"] = p.RecordingUrl,
+            ["featured"] = p.IsFeatured
         })
         .Cast<object?>()
         .ToList();
@@ -137,6 +162,7 @@ public class PracticeService(FirestoreClient client)
     {
         PieceId = fields.GetValueOrDefault("pieceId") as string ?? string.Empty,
         Title = fields.GetValueOrDefault("title") as string ?? string.Empty,
-        RecordingUrl = fields.GetValueOrDefault("recordingUrl") as string
+        RecordingUrl = fields.GetValueOrDefault("recordingUrl") as string,
+        IsFeatured = fields.GetValueOrDefault("featured") as bool? ?? false
     };
 }

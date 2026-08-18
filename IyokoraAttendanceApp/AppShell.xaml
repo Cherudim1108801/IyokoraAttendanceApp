@@ -24,6 +24,11 @@
             ContentTemplate="{DataTemplate views:PracticeHistoryPage}" />
 
         <ShellContent
+            Title="音源"
+            Route="recordings"
+            ContentTemplate="{DataTemplate views:RecordingsPage}" />
+
+        <ShellContent
             Title="曲"
             Route="pieces"
             ContentTemplate="{DataTemplate views:PiecesPage}" />

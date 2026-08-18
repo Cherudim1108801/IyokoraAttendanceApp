@@ -12,6 +12,15 @@ public class SongParticipation
 
     /// <summary>録音音源へのリンクが登録済みかどうか。</summary>
     public bool HasRecordingUrl => !string.IsNullOrEmpty(RecordingUrl);
+
+    /// <summary>「音源」タブで強調表示（ピン留め）されているかどうか。</summary>
+    public bool IsFeatured { get; init; }
+
+    /// <summary>強調表示をオンにする操作を提示できるかどうか（録音登録済み・未強調の場合）。</summary>
+    public bool CanToggleFeaturedOn => HasRecordingUrl && !IsFeatured;
+
+    /// <summary>強調表示をオフにする操作を提示できるかどうか（録音登録済み・強調中の場合）。</summary>
+    public bool CanToggleFeaturedOff => HasRecordingUrl && IsFeatured;
 }
 
 /// <summary>参加者1人分を表す○1個分の表示データ。</summary>

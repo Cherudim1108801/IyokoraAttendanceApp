@@ -186,7 +186,8 @@ public partial class PracticeDetailViewModel(
                     PieceId = pieceRef.PieceId,
                     Title = pieceRef.Title,
                     Dots = dots,
-                    RecordingUrl = pieceRef.RecordingUrl
+                    RecordingUrl = pieceRef.RecordingUrl,
+                    IsFeatured = pieceRef.IsFeatured
                 });
             }
 
@@ -284,4 +285,20 @@ public partial class PracticeDetailViewModel(
         }
     }
 
+    [RelayCommand]
+    private async Task ToggleRecordingFeaturedAsync(SongParticipation song)
+    {
+        if (!IsAdmin || Practice is null || !song.HasRecordingUrl)
+            return;
+
+        try
+        {
+            await practiceService.SetPieceRecordingFeaturedAsync(Practice.Id, song.PieceId, !song.IsFeatured);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"更新に失敗しました。({ex.Message})";
+        }
+    }
 }
