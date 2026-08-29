@@ -59,9 +59,10 @@ public class PracticeService(FirestoreClient client)
     /// <param name="title">タイトル（任意）。</param>
     /// <param name="place">場所（任意）。</param>
     /// <param name="pieces">演奏予定曲。</param>
+    /// <param name="requiresKeyPickup">鍵の受け取りが必要かどうか。</param>
     /// <param name="ct">キャンセルトークン。</param>
     /// <returns>発行された練習予定ID。</returns>
-    public async Task<string> CreateAsync(DateTime date, string title, string place, IReadOnlyList<PracticePieceRef> pieces, CancellationToken ct = default)
+    public async Task<string> CreateAsync(DateTime date, string title, string place, IReadOnlyList<PracticePieceRef> pieces, bool requiresKeyPickup, CancellationToken ct = default)
     {
         var id = Guid.NewGuid().ToString("N");
         // 練習日は時刻を持たないカレンダー日付として扱う。DateTime.ToUniversalTime() による
@@ -74,6 +75,8 @@ public class PracticeService(FirestoreClient client)
             ["title"] = title,
             ["place"] = place,
             ["pieces"] = ToPieceFields(pieces),
+            ["requiresKeyPickup"] = requiresKeyPickup,
+            ["keyPickedUp"] = false,
             ["createdAt"] = DateTime.UtcNow
         };
         await client.UpsertDocumentAsync(Collection, id, fields, ct);
@@ -134,6 +137,19 @@ public class PracticeService(FirestoreClient client)
         await client.UpsertDocumentAsync(Collection, practiceId, fields, ct);
     }
 
+    /// <summary>指定の練習の鍵の受け取り状況を設定する。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="keyPickedUp">受け取り済みかどうか。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    public async Task SetKeyPickedUpAsync(string practiceId, bool keyPickedUp, CancellationToken ct = default)
+    {
+        var fields = new Dictionary<string, object?>
+        {
+            ["keyPickedUp"] = keyPickedUp
+        };
+        await client.UpsertDocumentAsync(Collection, practiceId, fields, ct);
+    }
+
     private static List<object?> ToPieceFields(IReadOnlyList<PracticePieceRef> pieces) => pieces
         .Select(p => new Dictionary<string, object?>
         {
@@ -155,7 +171,9 @@ public class PracticeService(FirestoreClient client)
             .OfType<Dictionary<string, object?>>()
             .Select(ToPieceRef)
             .ToList(),
-        CreatedAt = doc.GetDateTime("createdAt")
+        CreatedAt = doc.GetDateTime("createdAt"),
+        RequiresKeyPickup = doc.GetBool("requiresKeyPickup"),
+        KeyPickedUp = doc.GetBool("keyPickedUp")
     };
 
     private static PracticePieceRef ToPieceRef(Dictionary<string, object?> fields) => new()

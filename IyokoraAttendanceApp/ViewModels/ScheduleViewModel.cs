@@ -35,6 +35,10 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
     [ObservableProperty]
     public partial string NewPlace { get; set; } = string.Empty;
 
+    /// <summary>鍵の受け取りが必要かどうか。管理者のみが参照できる情報として練習予定に保存される。</summary>
+    [ObservableProperty]
+    public partial bool NewRequiresKeyPickup { get; set; }
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -88,10 +92,11 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
                 .Select(p => new PracticePieceRef { PieceId = p.PieceId, Title = p.Title })
                 .ToList();
 
-            await practiceService.CreateAsync(NewDate, NewTitle.Trim(), NewPlace.Trim(), selectedPieces);
+            await practiceService.CreateAsync(NewDate, NewTitle.Trim(), NewPlace.Trim(), selectedPieces, NewRequiresKeyPickup);
             NewTitle = string.Empty;
             NewPlace = string.Empty;
             NewDate = DateTime.Today.AddDays(7);
+            NewRequiresKeyPickup = false;
             IsAddPanelVisible = false;
             await LoadAsync();
         }

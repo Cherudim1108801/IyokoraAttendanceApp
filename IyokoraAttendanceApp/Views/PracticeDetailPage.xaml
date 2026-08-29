@@ -166,6 +166,29 @@
                     </VerticalStackLayout>
                 </VerticalStackLayout>
 
+                <!-- 鍵の受け取り状況（管理者のみ） -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding IsAdmin}">
+                    <Label Text="鍵の受け取り状況" FontSize="16" FontAttributes="Bold" />
+
+                    <Label Text="この練習では鍵の受け取りは不要です。" FontSize="13" TextColor="{StaticResource Gray500}"
+                           IsVisible="{Binding Practice.RequiresKeyPickup, Converter={StaticResource InvertedBoolConverter}}" />
+
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding Practice.RequiresKeyPickup}">
+                        <Label Grid.Column="0" Text="受け取り済み" TextColor="#3EC1A4" FontAttributes="Bold"
+                               VerticalOptions="Center" IsVisible="{Binding Practice.KeyPickedUp}" />
+                        <Label Grid.Column="0" Text="未受け取り" TextColor="{StaticResource Magenta}" FontAttributes="Bold"
+                               VerticalOptions="Center" IsVisible="{Binding Practice.KeyPickedUp, Converter={StaticResource InvertedBoolConverter}}" />
+                        <Button Grid.Column="1" Text="未受け取りに戻す" FontSize="12"
+                                BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
+                                IsVisible="{Binding Practice.KeyPickedUp}"
+                                Command="{Binding ToggleKeyPickedUpCommand}" />
+                        <Button Grid.Column="1" Text="受け取り済みにする" FontSize="12"
+                                BackgroundColor="Transparent" TextColor="{StaticResource Primary}"
+                                IsVisible="{Binding Practice.KeyPickedUp, Converter={StaticResource InvertedBoolConverter}}"
+                                Command="{Binding ToggleKeyPickedUpCommand}" />
+                    </Grid>
+                </VerticalStackLayout>
+
             </VerticalStackLayout>
         </ScrollView>
     </RefreshView>

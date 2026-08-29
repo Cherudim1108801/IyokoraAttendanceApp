@@ -41,6 +41,11 @@
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
 
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,8,0,0">
+                        <CheckBox IsChecked="{Binding NewRequiresKeyPickup}" />
+                        <Label Grid.Column="1" Text="鍵の受け取りが必要" VerticalOptions="Center" />
+                    </Grid>
+
                     <Button Text="この内容で登録" Command="{Binding AddPracticeCommand}" Margin="0,8,0,0" />
                 </VerticalStackLayout>
             </Border>

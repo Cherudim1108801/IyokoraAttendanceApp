@@ -301,4 +301,21 @@ public partial class PracticeDetailViewModel(
             ErrorMessage = $"更新に失敗しました。({ex.Message})";
         }
     }
+
+    [RelayCommand]
+    private async Task ToggleKeyPickedUpAsync()
+    {
+        if (!IsAdmin || Practice is null)
+            return;
+
+        try
+        {
+            await practiceService.SetKeyPickedUpAsync(Practice.Id, !Practice.KeyPickedUp);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"更新に失敗しました。({ex.Message})";
+        }
+    }
 }

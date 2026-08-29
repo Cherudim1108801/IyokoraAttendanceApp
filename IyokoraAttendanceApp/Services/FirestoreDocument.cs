@@ -18,6 +18,10 @@ public class FirestoreDocument
     public DateTime GetDateTime(string key, DateTime fallback = default) =>
         Fields.TryGetValue(key, out var v) && v is DateTime dt ? dt : fallback;
 
+    /// <summary>指定フィールドを真偽値として取得する。存在しない・型が異なる場合は <paramref name="fallback"/>。</summary>
+    public bool GetBool(string key, bool fallback = false) =>
+        Fields.TryGetValue(key, out var v) && v is bool b ? b : fallback;
+
     /// <summary>指定フィールドを配列として取得する。存在しない・型が異なる場合は空リスト。</summary>
     public List<object?> GetList(string key) =>
         Fields.TryGetValue(key, out var v) && v is List<object?> list ? list : [];
