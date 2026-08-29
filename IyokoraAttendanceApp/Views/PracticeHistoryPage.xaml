@@ -1,65 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ContentPage
-    x:Class="IyokoraAttendanceApp.Views.SchedulePage"
+    x:Class="IyokoraAttendanceApp.Views.PracticeHistoryPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:IyokoraAttendanceApp.ViewModels"
     xmlns:models="clr-namespace:IyokoraAttendanceApp.Models"
-    x:DataType="vm:ScheduleViewModel"
+    x:DataType="vm:PracticeHistoryViewModel"
     x:Name="Root"
-    Title="練習予定">
+    Title="過去の練習">
 
     <Grid RowDefinitions="Auto,*">
 
-        <VerticalStackLayout Grid.Row="0" Padding="16,12" Spacing="10">
-            <Button Text="＋ 練習予定を追加" Command="{Binding ToggleAddPanelCommand}" IsVisible="{Binding IsAdmin}" />
-
-            <Border IsVisible="{Binding IsAddPanelVisible}" Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
-                   BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="日付" FontAttributes="Bold" />
-                    <DatePicker Date="{Binding NewDate}" />
-
-                    <Label Text="タイトル（任意）" FontAttributes="Bold" />
-                    <Entry Text="{Binding NewTitle}" Placeholder="例：定期練習" />
-
-                    <Label Text="場所（任意）" FontAttributes="Bold" />
-                    <Entry Text="{Binding NewPlace}" Placeholder="例：市民会館 音楽室" />
-
-                    <Label Text="練習する曲（任意）" FontAttributes="Bold" Margin="0,8,0,0" />
-                    <Label Text="登録されている曲はありません。「曲」タブから登録できます。" FontSize="12" TextColor="{StaticResource Gray500}"
-                           IsVisible="{Binding PieceInputs.Count, Converter={StaticResource IntToBoolConverter}, ConverterParameter=Invert}" />
-
-                    <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding PieceInputs}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="vm:PieceSelectionInput">
-                                <Grid ColumnDefinitions="Auto,*" Padding="0,4" ColumnSpacing="8">
-                                    <CheckBox IsChecked="{Binding IsSelected}" />
-                                    <Label Grid.Column="1" Text="{Binding Title}" VerticalOptions="Center" />
-                                </Grid>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,8,0,0">
-                        <CheckBox IsChecked="{Binding NewRequiresKeyPickup}" />
-                        <Label Grid.Column="1" Text="鍵の受け取りが必要" VerticalOptions="Center" />
-                    </Grid>
-
-                    <Button Text="この内容で登録" Command="{Binding AddPracticeCommand}" Margin="0,8,0,0" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Label
-                Text="{Binding ErrorMessage}"
-                TextColor="{StaticResource Magenta}"
-                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
-        </VerticalStackLayout>
+        <Label Grid.Row="0"
+               Text="{Binding ErrorMessage}"
+               TextColor="{StaticResource Magenta}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}"
+               Margin="16,12,16,0" />
 
         <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
-            <CollectionView ItemsSource="{Binding Practices}" Margin="16,0,16,16">
+            <CollectionView ItemsSource="{Binding Practices}" Margin="16,12,16,16">
                 <CollectionView.EmptyView>
-                    <Label Text="登録されている練習予定はありません。" HorizontalOptions="Center" Margin="0,40,0,0"
+                    <Label Text="過去の練習データはありません。" HorizontalOptions="Center" Margin="0,40,0,0"
                            TextColor="{StaticResource Gray500}" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>

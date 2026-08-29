@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="IyokoraAttendanceApp.Views.RecordingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:IyokoraAttendanceApp.ViewModels"
+    xmlns:models="clr-namespace:IyokoraAttendanceApp.Models"
+    x:DataType="vm:RecordingsViewModel"
+    x:Name="Root"
+    Title="音源">
+
+    <RefreshView IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="18">
+
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="{StaticResource Magenta}"
+                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+                <Label Text="録音データはまだありません。練習詳細画面から曲ごとに録音リンクを登録できます。"
+                       FontSize="14" TextColor="{StaticResource Gray500}"
+                       IsVisible="{Binding HasNoRecordings}" />
+
+                <!-- 注目の音源 -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding HasFeaturedRecordings}">
+                    <Label Text="★ 注目の音源" FontSize="16" FontAttributes="Bold" />
+
+                    <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding FeaturedRecordings}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:RecordingItem">
+                                <Grid Padding="0,6">
+                                    <Border Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
+                                           BackgroundColor="{AppThemeBinding Light=#FFF6E0, Dark={StaticResource Gray600}}">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenRecordingCommand}"
+                                                CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+                                            <Label Text="{Binding PracticeLabel}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- すべての録音 -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding HasNoRecordings, Converter={StaticResource InvertedBoolConverter}}">
+                    <Label Text="すべての録音" FontSize="16" FontAttributes="Bold" />
+
+                    <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding AllRecordings}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:RecordingItem">
+                                <Grid Padding="0,6">
+                                    <Border Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
+                                           BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray900}}">
+                                        <Border.Shadow>
+                                            <Shadow Brush="Black" Opacity="0.15" Radius="8" Offset="0,2" />
+                                        </Border.Shadow>
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenRecordingCommand}"
+                                                CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <Label Grid.Column="0" Text="★" TextColor="#F5A623" FontSize="14"
+                                                   VerticalOptions="Start" Margin="0,0,6,0"
+                                                   IsVisible="{Binding IsFeatured}" />
+                                            <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                                <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+                                                <Label Text="{Binding PracticeLabel}" FontSize="12" TextColor="{StaticResource Gray500}" />
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

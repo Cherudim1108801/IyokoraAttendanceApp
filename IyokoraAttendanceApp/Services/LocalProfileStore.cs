@@ -11,6 +11,7 @@ public class LocalProfileStore
     private const string KeyMemberId = "profile.memberId";
     private const string KeyName = "profile.name";
     private const string KeyPart = "profile.part";
+    private const string KeyRole = "profile.role";
     private const string KeyPieceParts = "profile.pieceParts";
 
     /// <summary>名前が登録済みかどうか（オンボーディング完了の判定に使用）。</summary>
@@ -49,6 +50,15 @@ public class LocalProfileStore
         set => Preferences.Default.Set(KeyPart, value.ToString());
     }
 
+    /// <summary>役割。未設定時は <see cref="Role.GeneralMember"/> を既定値として返す。</summary>
+    public Role Role
+    {
+        get => Enum.TryParse<Role>(Preferences.Default.Get(KeyRole, string.Empty), out var role)
+            ? role
+            : Role.GeneralMember;
+        set => Preferences.Default.Set(KeyRole, value.ToString());
+    }
+
     /// <summary>曲ごとの内部パート（分割）担当。</summary>
     public List<MemberPiecePart> PieceParts
     {
@@ -68,6 +78,7 @@ public class LocalProfileStore
         Preferences.Default.Remove(KeyMemberId);
         Preferences.Default.Remove(KeyName);
         Preferences.Default.Remove(KeyPart);
+        Preferences.Default.Remove(KeyRole);
         Preferences.Default.Remove(KeyPieceParts);
     }
 }

@@ -12,6 +12,9 @@ public class Member
     /// <summary>所属パート。</summary>
     public required PartType Part { get; set; }
 
+    /// <summary>役割（管理者／一般団員）。</summary>
+    public required Role Role { get; set; }
+
     /// <summary>曲ごとの内部パート（分割）担当。</summary>
     public List<MemberPiecePart> PieceParts { get; set; } = [];
 

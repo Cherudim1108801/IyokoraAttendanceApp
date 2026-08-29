@@ -12,7 +12,7 @@
     <Grid RowDefinitions="Auto,*">
 
         <VerticalStackLayout Grid.Row="0" Padding="16,12" Spacing="10">
-            <Button Text="＋ 曲を追加" Command="{Binding ToggleAddPanelCommand}" />
+            <Button Text="＋ 曲を追加" Command="{Binding ToggleAddPanelCommand}" IsVisible="{Binding IsAdmin}" />
 
             <Border IsVisible="{Binding IsAddPanelVisible}" Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
                    BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
@@ -71,6 +71,7 @@
                                     </VerticalStackLayout>
                                     <Button Grid.Column="1" Text="削除" FontSize="12"
                                             BackgroundColor="Transparent" TextColor="{StaticResource Magenta}"
+                                            IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
                                             Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeletePieceCommand}"
                                             CommandParameter="{Binding .}" />
                                 </Grid>
