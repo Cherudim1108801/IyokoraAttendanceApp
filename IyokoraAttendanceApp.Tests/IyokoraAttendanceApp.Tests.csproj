@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>IyokoraAttendanceApp.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    IyokoraAttendanceApp 本体は net10.0-android 等のプラットフォーム固有 TFM でのみビルドされる
+    .NET MAUI プロジェクトのため、実機・エミュレータなしでは動かない ProjectReference は張れない。
+    そのため本体側のロジック（Models / Services のうち UI に依存しない部分）は
+    ソースファイルを直接リンクしてコンパイルし、通常の `dotnet test` だけで実行できるようにしている。
+    Color / Colors 等の描画用プリミティブ型のみ Microsoft.Maui.Graphics パッケージから利用する。
+  -->
+
+  <ItemGroup>
+    <Using Include="Microsoft.Maui.Graphics" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Maui.Graphics" Version="10.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Services: MAUI に依存しない純粋なロジック -->
+    <Compile Include="..\IyokoraAttendanceApp\Services\NameCipher.cs" Link="ProductionCode\Services\NameCipher.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Services\FirestoreDocument.cs" Link="ProductionCode\Services\FirestoreDocument.cs" />
+
+    <!-- Models: UI非依存のロジック（表示名・色・ID生成・サマリ文字列など） -->
+    <Compile Include="..\IyokoraAttendanceApp\Models\Role.cs" Link="ProductionCode\Models\Role.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\PartType.cs" Link="ProductionCode\Models\PartType.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\PartDivision.cs" Link="ProductionCode\Models\PartDivision.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\AttendanceStatus.cs" Link="ProductionCode\Models\AttendanceStatus.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\Attendance.cs" Link="ProductionCode\Models\Attendance.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\PartSummary.cs" Link="ProductionCode\Models\PartSummary.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\PiecePartAssignment.cs" Link="ProductionCode\Models\PiecePartAssignment.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\Piece.cs" Link="ProductionCode\Models\Piece.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\PracticePieceRef.cs" Link="ProductionCode\Models\PracticePieceRef.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\Practice.cs" Link="ProductionCode\Models\Practice.cs" />
+  </ItemGroup>
+
+</Project>
