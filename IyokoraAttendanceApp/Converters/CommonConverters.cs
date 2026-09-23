@@ -33,3 +33,17 @@ public class IntToBoolConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+/// <summary>
+/// <see cref="TimeOnly"/>? と <see cref="TimePicker.Time"/>（<see cref="TimeSpan"/>、null不可）を相互変換する。
+/// 未設定（null）の間は 00:00 を表示上のみの既定値として扱う。ユーザーが操作するまでは
+/// TimePicker から null に対する ConvertBack は呼ばれないため、未操作の項目は null のまま保たれる。
+/// </summary>
+public class TimeOnlyToTimeSpanConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is TimeOnly t ? t.ToTimeSpan() : TimeSpan.Zero;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is TimeSpan ts ? TimeOnly.FromTimeSpan(ts) : null;
+}

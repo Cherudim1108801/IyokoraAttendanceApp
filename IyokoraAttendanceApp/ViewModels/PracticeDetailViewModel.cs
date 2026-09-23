@@ -60,11 +60,31 @@ public partial class PracticeDetailViewModel(
     [ObservableProperty]
     public partial bool IsPartModalVisible { get; set; }
 
+    /// <summary>タイムスケジュール編集パネルを表示中かどうか。</summary>
+    [ObservableProperty]
+    public partial bool IsScheduleEditPanelVisible { get; set; }
+
+    /// <summary>編集中の開始時刻（任意）。</summary>
+    [ObservableProperty]
+    public partial TimeOnly? EditStartTime { get; set; }
+
+    /// <summary>編集中の終了時刻（任意）。</summary>
+    [ObservableProperty]
+    public partial TimeOnly? EditEndTime { get; set; }
+
+    /// <summary>編集中のタイムスケジュール項目一覧。</summary>
+    public ObservableCollection<TimelineItemInput> EditTimelineItems { get; } = [];
+
     public bool IsAttendingSelected => MyStatus == AttendanceStatus.Attending;
     public bool IsNotAttendingSelected => MyStatus == AttendanceStatus.NotAttending;
     public bool IsUndecidedSelected => MyStatus == AttendanceStatus.Undecided;
 
     public string AttendanceSummaryLabel => $"参加予定: {TotalAttending} / {TotalMembers} 人";
+
+    /// <summary>タイムスケジュールの「編集」ボタンを表示するかどうか。管理者かつ編集パネル非表示中のみ表示する。</summary>
+    public bool ShowScheduleEditButton => IsAdmin && !IsScheduleEditPanelVisible;
+
+    partial void OnIsScheduleEditPanelVisibleChanged(bool value) => OnPropertyChanged(nameof(ShowScheduleEditButton));
 
     partial void OnMyStatusChanged(AttendanceStatus value)
     {
@@ -316,6 +336,76 @@ public partial class PracticeDetailViewModel(
         catch (Exception ex)
         {
             ErrorMessage = $"更新に失敗しました。({ex.Message})";
+        }
+    }
+
+    [RelayCommand]
+    private void OpenScheduleEditPanel()
+    {
+        if (Practice is null)
+            return;
+
+        EditStartTime = PracticeScheduleValidator.ParseTimeOrNull(Practice.StartTime);
+        EditEndTime = PracticeScheduleValidator.ParseTimeOrNull(Practice.EndTime);
+        EditTimelineItems.Clear();
+        foreach (var item in Practice.TimelineItems.OrderBy(i => i.StartTime))
+        {
+            EditTimelineItems.Add(new TimelineItemInput
+            {
+                StartTime = PracticeScheduleValidator.ParseTimeOrNull(item.StartTime),
+                EndTime = PracticeScheduleValidator.ParseTimeOrNull(item.EndTime),
+                Content = item.Content
+            });
+        }
+        IsScheduleEditPanelVisible = true;
+    }
+
+    [RelayCommand]
+    private void CloseScheduleEditPanel() => IsScheduleEditPanelVisible = false;
+
+    [RelayCommand]
+    private void AddEditTimelineItem() => EditTimelineItems.Add(new TimelineItemInput());
+
+    [RelayCommand]
+    private void RemoveEditTimelineItem(TimelineItemInput item) => EditTimelineItems.Remove(item);
+
+    [RelayCommand]
+    private async Task SaveScheduleAsync()
+    {
+        if (!IsAdmin || Practice is null)
+            return;
+
+        ErrorMessage = null;
+
+        if (!PracticeScheduleValidator.TryValidateTimeRange(EditStartTime, EditEndTime, out var rangeError))
+        {
+            ErrorMessage = rangeError;
+            return;
+        }
+
+        var timelineItems = new List<PracticeTimelineItem>();
+        foreach (var item in EditTimelineItems)
+        {
+            if (!PracticeScheduleValidator.TryValidateTimelineItem(item, out var itemError))
+            {
+                ErrorMessage = itemError;
+                return;
+            }
+            timelineItems.Add(new PracticeTimelineItem { StartTime = item.StartTime!.Value.ToString("HH:mm"), EndTime = item.EndTime!.Value.ToString("HH:mm"), Content = item.Content.Trim() });
+        }
+
+        try
+        {
+            var startTime = EditStartTime?.ToString("HH:mm") ?? string.Empty;
+            var endTime = EditEndTime?.ToString("HH:mm") ?? string.Empty;
+            await practiceService.UpdateScheduleAsync(Practice.Id, startTime, endTime, timelineItems);
+
+            IsScheduleEditPanelVisible = false;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"タイムスケジュールの保存に失敗しました。({ex.Message})";
         }
     }
 }

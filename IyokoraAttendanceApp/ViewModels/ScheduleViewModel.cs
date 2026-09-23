@@ -35,9 +35,26 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
     [ObservableProperty]
     public partial string NewPlace { get; set; } = string.Empty;
 
+    /// <summary>入力中の開始時刻（任意）。</summary>
+    [ObservableProperty]
+    public partial TimeOnly? NewStartTime { get; set; }
+
+    /// <summary>入力中の終了時刻（任意）。</summary>
+    [ObservableProperty]
+    public partial TimeOnly? NewEndTime { get; set; }
+
+    /// <summary>入力中のタイムスケジュール項目一覧（任意・10分単位）。</summary>
+    public ObservableCollection<TimelineItemInput> NewTimelineItems { get; } = [];
+
     /// <summary>鍵の受け取りが必要かどうか。管理者のみが参照できる情報として練習予定に保存される。</summary>
     [ObservableProperty]
     public partial bool NewRequiresKeyPickup { get; set; }
+
+    [RelayCommand]
+    private void AddTimelineItem() => NewTimelineItems.Add(new TimelineItemInput());
+
+    [RelayCommand]
+    private void RemoveTimelineItem(TimelineItemInput item) => NewTimelineItems.Remove(item);
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -85,6 +102,24 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
             return;
 
         ErrorMessage = null;
+
+        if (!PracticeScheduleValidator.TryValidateTimeRange(NewStartTime, NewEndTime, out var rangeError))
+        {
+            ErrorMessage = rangeError;
+            return;
+        }
+
+        var timelineItems = new List<PracticeTimelineItem>();
+        foreach (var item in NewTimelineItems)
+        {
+            if (!PracticeScheduleValidator.TryValidateTimelineItem(item, out var itemError))
+            {
+                ErrorMessage = itemError;
+                return;
+            }
+            timelineItems.Add(new PracticeTimelineItem { StartTime = item.StartTime!.Value.ToString("HH:mm"), EndTime = item.EndTime!.Value.ToString("HH:mm"), Content = item.Content.Trim() });
+        }
+
         try
         {
             var selectedPieces = PieceInputs
@@ -92,9 +127,14 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
                 .Select(p => new PracticePieceRef { PieceId = p.PieceId, Title = p.Title })
                 .ToList();
 
-            await practiceService.CreateAsync(NewDate, NewTitle.Trim(), NewPlace.Trim(), selectedPieces, NewRequiresKeyPickup);
+            var startTime = NewStartTime?.ToString("HH:mm") ?? string.Empty;
+            var endTime = NewEndTime?.ToString("HH:mm") ?? string.Empty;
+            await practiceService.CreateAsync(NewDate, NewTitle.Trim(), NewPlace.Trim(), startTime, endTime, timelineItems, selectedPieces, NewRequiresKeyPickup);
             NewTitle = string.Empty;
             NewPlace = string.Empty;
+            NewStartTime = null;
+            NewEndTime = null;
+            NewTimelineItems.Clear();
             NewDate = DateTime.Today.AddDays(7);
             NewRequiresKeyPickup = false;
             IsAddPanelVisible = false;
