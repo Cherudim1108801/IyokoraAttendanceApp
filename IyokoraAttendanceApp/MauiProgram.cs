@@ -30,9 +30,12 @@ namespace IyokoraAttendanceApp
             builder.Services.AddSingleton<PracticeService>();
             builder.Services.AddSingleton<AttendanceService>();
             builder.Services.AddSingleton<PieceService>();
+            builder.Services.AddSingleton<ScheduleVoteService>();
+            builder.Services.AddSingleton<ScheduleCandidateService>();
 
             // ViewModels
             builder.Services.AddTransient<OnboardingViewModel>();
+            builder.Services.AddTransient<LoginViewModel>();
             builder.Services.AddTransient<DashboardViewModel>();
             builder.Services.AddTransient<ScheduleViewModel>();
             builder.Services.AddTransient<PracticeHistoryViewModel>();
@@ -40,9 +43,11 @@ namespace IyokoraAttendanceApp
             builder.Services.AddTransient<PracticeDetailViewModel>();
             builder.Services.AddTransient<ProfileViewModel>();
             builder.Services.AddTransient<PiecesViewModel>();
+            builder.Services.AddTransient<SchedulePollViewModel>();
 
             // Views
             builder.Services.AddTransient<OnboardingPage>();
+            builder.Services.AddTransient<LoginPage>();
             builder.Services.AddTransient<DashboardPage>();
             builder.Services.AddTransient<SchedulePage>();
             builder.Services.AddTransient<PracticeHistoryPage>();
@@ -50,6 +55,7 @@ namespace IyokoraAttendanceApp
             builder.Services.AddTransient<PracticeDetailPage>();
             builder.Services.AddTransient<ProfilePage>();
             builder.Services.AddTransient<PiecesPage>();
+            builder.Services.AddTransient<SchedulePollPage>();
 
             // Shell
             builder.Services.AddSingleton<AppShell>();

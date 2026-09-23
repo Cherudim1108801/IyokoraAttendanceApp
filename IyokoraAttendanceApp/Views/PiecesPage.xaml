@@ -14,6 +14,11 @@
         <VerticalStackLayout Grid.Row="0" Padding="16,12" Spacing="10">
             <Button Text="＋ 曲を追加" Command="{Binding ToggleAddPanelCommand}" IsVisible="{Binding IsAdmin}" />
 
+            <HorizontalStackLayout Spacing="8">
+                <CheckBox IsChecked="{Binding ShowArchived}" />
+                <Label Text="取り組みが終わった曲（非表示）も表示する" VerticalOptions="Center" FontSize="13" />
+            </HorizontalStackLayout>
+
             <Border IsVisible="{Binding IsAddPanelVisible}" Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
                    BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
                 <VerticalStackLayout Spacing="10">
@@ -63,13 +68,31 @@
                                 <Border.Shadow>
                                     <Shadow Brush="Black" Opacity="0.15" Radius="8" Offset="0,2" />
                                 </Border.Shadow>
-                                <Grid ColumnDefinitions="*,Auto">
+                                <Grid ColumnDefinitions="*,Auto,Auto">
                                     <VerticalStackLayout Spacing="4">
-                                        <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+                                            <Label Text="（非表示）" FontSize="12" TextColor="{StaticResource Gray500}"
+                                                   IsVisible="{Binding IsArchived}" />
+                                        </HorizontalStackLayout>
                                         <Label Text="{Binding PartsSummary}"
                                                FontSize="12" TextColor="{StaticResource Gray500}" />
                                     </VerticalStackLayout>
-                                    <Button Grid.Column="1" Text="削除" FontSize="12"
+                                    <Button Grid.Column="1" FontSize="12"
+                                            BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
+                                            IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.SetArchivedCommand}"
+                                            CommandParameter="{Binding .}">
+                                        <Button.Triggers>
+                                            <DataTrigger TargetType="Button" Binding="{Binding IsArchived}" Value="True">
+                                                <Setter Property="Text" Value="再表示" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Button" Binding="{Binding IsArchived}" Value="False">
+                                                <Setter Property="Text" Value="非表示" />
+                                            </DataTrigger>
+                                        </Button.Triggers>
+                                    </Button>
+                                    <Button Grid.Column="2" Text="削除" FontSize="12"
                                             BackgroundColor="Transparent" TextColor="{StaticResource Magenta}"
                                             IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
                                             Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeletePieceCommand}"

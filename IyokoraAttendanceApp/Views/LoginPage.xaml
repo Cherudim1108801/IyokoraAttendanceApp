@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="IyokoraAttendanceApp.Views.LoginPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:IyokoraAttendanceApp.ViewModels"
+    x:DataType="vm:LoginViewModel"
+    Shell.NavBarIsVisible="False"
+    Title="IDログイン">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20" VerticalOptions="Center">
+
+            <Label
+                Text="IDログイン"
+                FontSize="28"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+            <Label
+                Text="他の端末で登録したときに発行された、ログインIDを入力してください。"
+                FontSize="14"
+                TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center" />
+
+            <Label Text="ログインID" FontAttributes="Bold" Margin="0,16,0,0" />
+            <Entry Text="{Binding LoginIdInput}" Placeholder="{Binding LoginIdPlaceholder}" />
+
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="{StaticResource Magenta}"
+                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <Button
+                Text="ログイン"
+                Command="{Binding LoginCommand}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                Margin="0,16,0,0" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+            <Label Text="初めての方はこちらから登録してください。" FontSize="12" TextColor="{StaticResource Gray500}"
+                   HorizontalOptions="Center" Margin="0,20,0,0" />
+            <Button Text="登録する" Command="{Binding GoToOnboardingCommand}"
+                    BackgroundColor="Transparent" TextColor="{StaticResource Primary}" BorderColor="{StaticResource Primary}" BorderWidth="1" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

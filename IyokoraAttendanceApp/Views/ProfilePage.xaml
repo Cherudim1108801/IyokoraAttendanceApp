@@ -26,6 +26,10 @@
                 ItemDisplayBinding="{Binding Label}"
                 SelectedItem="{Binding SelectedRole}" />
 
+            <Label Text="ログインID" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Label Text="他の端末でこのアプリを使う場合は、このIDでログインしてください。" FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Label Text="{Binding LoginId}" FontSize="18" FontAttributes="Bold" CharacterSpacing="1" />
+
             <Label Text="曲ごとのパート担当" FontAttributes="Bold" Margin="0,8,0,0" />
             <Label Text="所属パートに内部分割（上・下など）が設定されている曲のみ表示されます。" FontSize="12" TextColor="{StaticResource Gray500}" />
             <Label Text="該当する曲はありません。" FontSize="12" TextColor="{StaticResource Gray500}"

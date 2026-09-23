@@ -13,7 +13,9 @@ namespace IyokoraAttendanceApp
             _profile = profile;
 
             Routing.RegisterRoute("onboarding", typeof(OnboardingPage));
+            Routing.RegisterRoute("login", typeof(LoginPage));
             Routing.RegisterRoute("practiceDetail", typeof(PracticeDetailPage));
+            Routing.RegisterRoute("schedulePoll", typeof(SchedulePollPage));
 
             Loaded += OnLoaded;
         }

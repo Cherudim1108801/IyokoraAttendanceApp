@@ -12,39 +12,71 @@
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="20" VerticalOptions="Center">
 
-            <Label
-                Text="ようこそ"
-                FontSize="28"
-                FontAttributes="Bold"
-                HorizontalOptions="Center" />
-            <Label
-                Text="出席管理アプリを使うために、表示名とパートを登録してください。"
-                FontSize="14"
-                TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
-                HorizontalOptions="Center"
-                HorizontalTextAlignment="Center" />
+            <VerticalStackLayout Spacing="20" IsVisible="{Binding AssignedLoginId, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Invert}">
+                <Label
+                    Text="ようこそ"
+                    FontSize="28"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Center" />
+                <Label
+                    Text="出席管理アプリを使うために、表示名とパートを登録してください。"
+                    FontSize="14"
+                    TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="Center" />
 
-            <Label Text="名前" FontAttributes="Bold" Margin="0,16,0,0" />
-            <Entry Text="{Binding Name}" Placeholder="例：山田 太郎" />
+                <Label Text="名前" FontAttributes="Bold" Margin="0,16,0,0" />
+                <Entry Text="{Binding Name}" Placeholder="例：山田 太郎" />
 
-            <Label Text="パート" FontAttributes="Bold" Margin="0,8,0,0" />
-            <Picker
-                ItemsSource="{Binding PartOptions}"
-                ItemDisplayBinding="{Binding Label}"
-                SelectedItem="{Binding SelectedPart}" />
+                <Label Text="パート" FontAttributes="Bold" Margin="0,8,0,0" />
+                <Picker
+                    ItemsSource="{Binding PartOptions}"
+                    ItemDisplayBinding="{Binding Label}"
+                    SelectedItem="{Binding SelectedPart}" />
 
-            <Label
-                Text="{Binding ErrorMessage}"
-                TextColor="{StaticResource Magenta}"
-                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="{StaticResource Magenta}"
+                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
-            <Button
-                Text="登録して始める"
-                Command="{Binding SaveCommand}"
-                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
-                Margin="0,16,0,0" />
+                <Button
+                    Text="登録して始める"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    Margin="0,16,0,0" />
 
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+                <Label Text="他の端末で登録済みの方はこちらからログインできます。" FontSize="12" TextColor="{StaticResource Gray500}"
+                       HorizontalOptions="Center" Margin="0,20,0,0" />
+                <Button Text="ログインする" Command="{Binding GoToLoginCommand}"
+                        BackgroundColor="Transparent" TextColor="{StaticResource Primary}" BorderColor="{StaticResource Primary}" BorderWidth="1" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="16" IsVisible="{Binding AssignedLoginId, Converter={StaticResource StringToBoolConverter}}">
+                <Label
+                    Text="登録が完了しました"
+                    FontSize="24"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Center" />
+                <Label
+                    Text="以下のログインIDを控えておいてください。他の端末でこのアプリを使うときに、このIDでログインできます。"
+                    FontSize="14"
+                    TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}"
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="Center" />
+
+                <Border Padding="16" Stroke="Transparent" StrokeShape="RoundRectangle 12"
+                       BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="あなたのログインID" FontSize="12" HorizontalOptions="Center" TextColor="{StaticResource Gray500}" />
+                        <Label Text="{Binding AssignedLoginId}" FontSize="28" FontAttributes="Bold"
+                               HorizontalOptions="Center" CharacterSpacing="2" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button Text="はじめる" Command="{Binding FinishCommand}" Margin="0,8,0,0" />
+            </VerticalStackLayout>
 
         </VerticalStackLayout>
     </ScrollView>

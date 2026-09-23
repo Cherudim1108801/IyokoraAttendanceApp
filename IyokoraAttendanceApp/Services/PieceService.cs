@@ -7,16 +7,28 @@ public class PieceService(FirestoreClient client)
 {
     private const string Collection = "pieces";
 
-    /// <summary>登録されている全曲を曲名順で取得する。</summary>
+    /// <summary>登録されている曲を曲名順で取得する。</summary>
+    /// <param name="includeArchived">true の場合、取り組みが終わり非表示にされた曲も含めて取得する。</param>
     /// <param name="ct">キャンセルトークン。</param>
-    public async Task<List<Piece>> GetAllAsync(CancellationToken ct = default)
+    public async Task<List<Piece>> GetAllAsync(bool includeArchived = false, CancellationToken ct = default)
     {
         var docs = await client.ListDocumentsAsync(Collection, ct);
-        return docs
+        var pieces = docs
             .Where(d => d.GetString("groupId") == FirebaseOptions.GroupId)
-            .Select(ToPiece)
+            .Select(ToPiece);
+        return PieceVisibility.Filter(pieces, includeArchived)
             .OrderBy(p => p.Title, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
+    }
+
+    /// <summary>曲のアーカイブ状態（曲一覧からの非表示）を切り替える。</summary>
+    /// <param name="pieceId">曲ID。</param>
+    /// <param name="isArchived">true の場合は非表示、false の場合は再表示。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    public Task SetArchivedAsync(string pieceId, bool isArchived, CancellationToken ct = default)
+    {
+        var fields = new Dictionary<string, object?> { ["isArchived"] = isArchived };
+        return client.UpsertDocumentAsync(Collection, pieceId, fields, ct);
     }
 
     /// <summary>新しい曲を登録する。</summary>
@@ -59,7 +71,8 @@ public class PieceService(FirestoreClient client)
             .OfType<Dictionary<string, object?>>()
             .Select(ToAssignment)
             .ToList(),
-        CreatedAt = doc.GetDateTime("createdAt")
+        CreatedAt = doc.GetDateTime("createdAt"),
+        IsArchived = doc.GetBool("isArchived")
     };
 
     private static PiecePartAssignment ToAssignment(Dictionary<string, object?> fields) => new()

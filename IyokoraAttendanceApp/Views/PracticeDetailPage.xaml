@@ -19,6 +19,9 @@
                            FontSize="24" FontAttributes="Bold" />
                     <Label Text="{Binding Practice.Title}"
                            IsVisible="{Binding Practice.Title, Converter={StaticResource StringToBoolConverter}}" />
+                    <Label Text="{Binding Practice.TimeRangeSummary, StringFormat='🕒 {0}'}"
+                           IsVisible="{Binding Practice.TimeRangeSummary, Converter={StaticResource StringToBoolConverter}}"
+                           TextColor="{StaticResource Gray500}" />
                     <Label Text="{Binding Practice.Place, StringFormat='📍 {0}'}"
                            IsVisible="{Binding Practice.Place, Converter={StaticResource StringToBoolConverter}}"
                            TextColor="{StaticResource Gray500}" />
@@ -32,6 +35,85 @@
                     Text="{Binding ErrorMessage}"
                     TextColor="{StaticResource Magenta}"
                     IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+                <!-- タイムスケジュール -->
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="タイムスケジュール" FontSize="16" FontAttributes="Bold" />
+                        <Button Grid.Column="1" Text="編集" FontSize="12"
+                                BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
+                                IsVisible="{Binding ShowScheduleEditButton}"
+                                Command="{Binding OpenScheduleEditPanelCommand}" />
+                    </Grid>
+
+                    <Border IsVisible="{Binding IsScheduleEditPanelVisible}" Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
+                           BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="開始時刻（任意）" FontSize="12" />
+                            <TimePicker Time="{Binding EditStartTime, Converter={StaticResource TimeOnlyToTimeSpanConverter}}" Format="HH:mm" />
+                            <Label Text="終了時刻（任意）" FontSize="12" />
+                            <TimePicker Time="{Binding EditEndTime, Converter={StaticResource TimeOnlyToTimeSpanConverter}}" Format="HH:mm" />
+
+                            <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding EditTimelineItems}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:TimelineItemInput">
+                                        <Border Padding="10" Stroke="Transparent" StrokeShape="RoundRectangle 8"
+                                               BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray900}}">
+                                            <VerticalStackLayout Spacing="6">
+                                                <Label Text="開始" FontSize="12" />
+                                                <TimePicker Time="{Binding StartTime, Converter={StaticResource TimeOnlyToTimeSpanConverter}}" Format="HH:mm" />
+                                                <Label Text="終了" FontSize="12" />
+                                                <TimePicker Time="{Binding EndTime, Converter={StaticResource TimeOnlyToTimeSpanConverter}}" Format="HH:mm" />
+                                                <Label Text="内容" FontSize="12" />
+                                                <Entry Text="{Binding Content}" Placeholder="例：基礎合奏" />
+                                                <Button Text="この項目を削除" FontSize="12"
+                                                        BackgroundColor="Transparent" TextColor="{StaticResource Magenta}"
+                                                        Command="{Binding Source={x:Reference Root}, Path=BindingContext.RemoveEditTimelineItemCommand}"
+                                                        CommandParameter="{Binding .}" />
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                            <Button Text="＋ タイムスケジュールの項目を追加" Command="{Binding AddEditTimelineItemCommand}" />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,4,0,0">
+                                <Button Text="保存" Command="{Binding SaveScheduleCommand}" />
+                                <Button Grid.Column="1" Text="キャンセル" Command="{Binding CloseScheduleEditPanelCommand}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="8" IsVisible="{Binding IsScheduleEditPanelVisible, Converter={StaticResource InvertedBoolConverter}}">
+                        <Label Text="タイムスケジュールは登録されていません。" FontSize="13" TextColor="{StaticResource Gray500}"
+                               IsVisible="{Binding Practice.TimelineItems.Count, Converter={StaticResource IntToBoolConverter}, ConverterParameter=Invert}" />
+
+                        <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding Practice.TimelineItems}">
+                            <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:PracticeTimelineItem">
+                                <Grid Padding="0,4">
+                                    <Border Padding="10" Stroke="Transparent" StrokeShape="RoundRectangle 8"
+                                           BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray900}}">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label FontAttributes="Bold">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding StartTime}" />
+                                                        <Span Text=" 〜 " />
+                                                        <Span Text="{Binding EndTime}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                            <Label Text="{Binding Content}" FontSize="12" TextColor="{StaticResource Gray500}"
+                                                   IsVisible="{Binding Content, Converter={StaticResource StringToBoolConverter}}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
 
                 <!-- 自分の出欠 -->
                 <VerticalStackLayout Spacing="10">
@@ -174,8 +256,12 @@
                            IsVisible="{Binding Practice.RequiresKeyPickup, Converter={StaticResource InvertedBoolConverter}}" />
 
                     <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding Practice.RequiresKeyPickup}">
-                        <Label Grid.Column="0" Text="受け取り済み" TextColor="#3EC1A4" FontAttributes="Bold"
-                               VerticalOptions="Center" IsVisible="{Binding Practice.KeyPickedUp}" />
+                        <HorizontalStackLayout Grid.Column="0" Spacing="4" IsVisible="{Binding Practice.KeyPickedUp}">
+                            <Label Text="受け取り済み" TextColor="#3EC1A4" FontAttributes="Bold" VerticalOptions="Center" />
+                            <Label Text="{Binding Practice.KeyPickedUpByName, StringFormat='（{0}）'}" TextColor="#3EC1A4"
+                                   VerticalOptions="Center"
+                                   IsVisible="{Binding Practice.KeyPickedUpByName, Converter={StaticResource StringToBoolConverter}}" />
+                        </HorizontalStackLayout>
                         <Label Grid.Column="0" Text="未受け取り" TextColor="{StaticResource Magenta}" FontAttributes="Bold"
                                VerticalOptions="Center" IsVisible="{Binding Practice.KeyPickedUp, Converter={StaticResource InvertedBoolConverter}}" />
                         <Button Grid.Column="1" Text="未受け取りに戻す" FontSize="12"
