@@ -106,42 +106,49 @@ public class PracticeService(FirestoreClient client)
         await client.UpsertDocumentAsync(Collection, practiceId, fields, ct);
     }
 
+    /// <summary>指定の練習の演奏予定曲を更新する。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="pieces">更新後の演奏予定曲一覧。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    public Task UpdatePiecesAsync(string practiceId, IReadOnlyList<PracticePieceRef> pieces, CancellationToken ct = default) =>
+        SavePiecesAsync(practiceId, pieces, ct);
+
     /// <summary>指定IDの練習予定を削除する。</summary>
     /// <param name="practiceId">練習予定ID。</param>
     /// <param name="ct">キャンセルトークン。</param>
     public Task DeleteAsync(string practiceId, CancellationToken ct = default) =>
         client.DeleteDocumentAsync(Collection, practiceId, ct);
 
-    /// <summary>指定の練習における、指定の曲の録音音源リンクを設定・変更・削除する。</summary>
+    /// <summary>指定の練習における、指定の曲に新しい録音を追加する。</summary>
     /// <param name="practiceId">練習予定ID。</param>
     /// <param name="pieceId">対象の曲ID。</param>
-    /// <param name="recordingUrl">録音音源へのリンク（OneDriveなど）。削除する場合は null。</param>
+    /// <param name="name">録音の名前(任意)。</param>
+    /// <param name="url">録音音源へのリンク(OneDriveなど)。</param>
     /// <param name="ct">キャンセルトークン。</param>
-    public async Task SetPieceRecordingUrlAsync(string practiceId, string pieceId, string? recordingUrl, CancellationToken ct = default)
+    public async Task AddRecordingAsync(string practiceId, string pieceId, string name, string url, CancellationToken ct = default)
     {
         var practice = await GetByIdAsync(practiceId, ct);
         if (practice is null)
             return;
 
+        var newRecording = new PracticeRecording { Id = Guid.NewGuid().ToString("N"), Name = name, Url = url };
         var updatedPieces = practice.Pieces
             .Select(p => p.PieceId == pieceId
-                ? new PracticePieceRef { PieceId = p.PieceId, Title = p.Title, RecordingUrl = recordingUrl, IsFeatured = p.IsFeatured }
+                ? new PracticePieceRef { PieceId = p.PieceId, Title = p.Title, Recordings = [.. p.Recordings, newRecording] }
                 : p)
             .ToList();
 
-        var fields = new Dictionary<string, object?>
-        {
-            ["pieces"] = ToPieceFields(updatedPieces)
-        };
-        await client.UpsertDocumentAsync(Collection, practiceId, fields, ct);
+        await SavePiecesAsync(practiceId, updatedPieces, ct);
     }
 
-    /// <summary>指定の練習における、指定の曲の録音を「音源」タブで強調表示（ピン留め）するかどうかを設定する。</summary>
+    /// <summary>指定の練習・曲における、指定の録音の名前とURLを変更する。<paramref name="url"/> が空の場合は削除する。</summary>
     /// <param name="practiceId">練習予定ID。</param>
     /// <param name="pieceId">対象の曲ID。</param>
-    /// <param name="isFeatured">強調表示するかどうか。</param>
+    /// <param name="recordingId">対象の録音ID。</param>
+    /// <param name="name">録音の名前(任意)。</param>
+    /// <param name="url">録音音源へのリンク(OneDriveなど)。空文字列または null の場合は録音を削除する。</param>
     /// <param name="ct">キャンセルトークン。</param>
-    public async Task SetPieceRecordingFeaturedAsync(string practiceId, string pieceId, bool isFeatured, CancellationToken ct = default)
+    public async Task EditRecordingAsync(string practiceId, string pieceId, string recordingId, string name, string? url, CancellationToken ct = default)
     {
         var practice = await GetByIdAsync(practiceId, ct);
         if (practice is null)
@@ -149,15 +156,61 @@ public class PracticeService(FirestoreClient client)
 
         var updatedPieces = practice.Pieces
             .Select(p => p.PieceId == pieceId
-                ? new PracticePieceRef { PieceId = p.PieceId, Title = p.Title, RecordingUrl = p.RecordingUrl, IsFeatured = isFeatured }
+                ? new PracticePieceRef
+                {
+                    PieceId = p.PieceId,
+                    Title = p.Title,
+                    Recordings = string.IsNullOrEmpty(url)
+                        ? p.Recordings.Where(r => r.Id != recordingId).ToList()
+                        : p.Recordings
+                            .Select(r => r.Id == recordingId
+                                ? new PracticeRecording { Id = r.Id, Name = name, Url = url, IsFeatured = r.IsFeatured }
+                                : r)
+                            .ToList()
+                }
                 : p)
             .ToList();
 
+        await SavePiecesAsync(practiceId, updatedPieces, ct);
+    }
+
+    /// <summary>指定の練習・曲における、指定の録音を「音源」タブで強調表示（ピン留め）するかどうかを設定する。</summary>
+    /// <param name="practiceId">練習予定ID。</param>
+    /// <param name="pieceId">対象の曲ID。</param>
+    /// <param name="recordingId">対象の録音ID。</param>
+    /// <param name="isFeatured">強調表示するかどうか。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    public async Task SetRecordingFeaturedAsync(string practiceId, string pieceId, string recordingId, bool isFeatured, CancellationToken ct = default)
+    {
+        var practice = await GetByIdAsync(practiceId, ct);
+        if (practice is null)
+            return;
+
+        var updatedPieces = practice.Pieces
+            .Select(p => p.PieceId == pieceId
+                ? new PracticePieceRef
+                {
+                    PieceId = p.PieceId,
+                    Title = p.Title,
+                    Recordings = p.Recordings
+                        .Select(r => r.Id == recordingId
+                            ? new PracticeRecording { Id = r.Id, Name = r.Name, Url = r.Url, IsFeatured = isFeatured }
+                            : r)
+                        .ToList()
+                }
+                : p)
+            .ToList();
+
+        await SavePiecesAsync(practiceId, updatedPieces, ct);
+    }
+
+    private Task SavePiecesAsync(string practiceId, IReadOnlyList<PracticePieceRef> pieces, CancellationToken ct)
+    {
         var fields = new Dictionary<string, object?>
         {
-            ["pieces"] = ToPieceFields(updatedPieces)
+            ["pieces"] = ToPieceFields(pieces)
         };
-        await client.UpsertDocumentAsync(Collection, practiceId, fields, ct);
+        return client.UpsertDocumentAsync(Collection, practiceId, fields, ct);
     }
 
     /// <summary>指定の練習の鍵の受け取り状況を設定する。</summary>
@@ -197,8 +250,7 @@ public class PracticeService(FirestoreClient client)
         {
             ["pieceId"] = p.PieceId,
             ["title"] = p.Title,
-            ["recordingUrl"] = p.RecordingUrl,
-            ["featured"] = p.IsFeatured
+            ["recordings"] = PracticeRecordingMapper.ToRecordingFields(p.Recordings)
         })
         .Cast<object?>()
         .ToList();
@@ -229,7 +281,6 @@ public class PracticeService(FirestoreClient client)
     {
         PieceId = fields.GetValueOrDefault("pieceId") as string ?? string.Empty,
         Title = fields.GetValueOrDefault("title") as string ?? string.Empty,
-        RecordingUrl = fields.GetValueOrDefault("recordingUrl") as string,
-        IsFeatured = fields.GetValueOrDefault("featured") as bool? ?? false
+        Recordings = PracticeRecordingMapper.ToRecordings(fields)
     };
 }

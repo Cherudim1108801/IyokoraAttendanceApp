@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="IyokoraAttendanceApp.Views.MembersPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:IyokoraAttendanceApp.ViewModels"
+    xmlns:models="clr-namespace:IyokoraAttendanceApp.Models"
+    x:DataType="vm:MembersViewModel"
+    x:Name="Root"
+    Title="団員管理">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Label Grid.Row="0" Margin="16,12,16,0"
+               Text="{Binding ErrorMessage}"
+               TextColor="{StaticResource Magenta}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
+            <CollectionView ItemsSource="{Binding Members}" Margin="16,12,16,16">
+                <CollectionView.EmptyView>
+                    <Label Text="登録されている団員はいません。" HorizontalOptions="Center" Margin="0,40,0,0"
+                           TextColor="{StaticResource Gray500}" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Member">
+                        <Grid Padding="0,6">
+                            <Border Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
+                                   BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray900}}">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.15" Radius="8" Offset="0,2" />
+                                </Border.Shadow>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Spacing="4">
+                                        <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="16" />
+                                        <Label Text="{Binding LoginId, StringFormat='ログインID: {0}'}"
+                                               FontSize="12" TextColor="{StaticResource Gray500}" />
+                                        <Label Text="{Binding UpdatedAt, StringFormat='{0:yyyy年M月d日 HH:mm} 更新'}"
+                                               FontSize="12" TextColor="{StaticResource Gray500}" />
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="1" Text="削除" FontSize="12"
+                                            BackgroundColor="Transparent" TextColor="{StaticResource Magenta}"
+                                            IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeleteMemberCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

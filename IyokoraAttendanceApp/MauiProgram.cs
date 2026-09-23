@@ -44,6 +44,7 @@ namespace IyokoraAttendanceApp
             builder.Services.AddTransient<ProfileViewModel>();
             builder.Services.AddTransient<PiecesViewModel>();
             builder.Services.AddTransient<SchedulePollViewModel>();
+            builder.Services.AddTransient<MembersViewModel>();
 
             // Views
             builder.Services.AddTransient<OnboardingPage>();
@@ -56,6 +57,7 @@ namespace IyokoraAttendanceApp
             builder.Services.AddTransient<ProfilePage>();
             builder.Services.AddTransient<PiecesPage>();
             builder.Services.AddTransient<SchedulePollPage>();
+            builder.Services.AddTransient<MembersPage>();
 
             // Shell
             builder.Services.AddSingleton<AppShell>();

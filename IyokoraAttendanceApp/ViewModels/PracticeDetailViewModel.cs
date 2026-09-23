@@ -75,6 +75,13 @@ public partial class PracticeDetailViewModel(
     /// <summary>編集中のタイムスケジュール項目一覧。</summary>
     public ObservableCollection<TimelineItemInput> EditTimelineItems { get; } = [];
 
+    /// <summary>演奏予定曲の編集パネルを表示中かどうか。</summary>
+    [ObservableProperty]
+    public partial bool IsPiecesEditPanelVisible { get; set; }
+
+    /// <summary>編集中のレパートリー曲の選択状態一覧。</summary>
+    public ObservableCollection<PieceSelectionInput> EditPieceInputs { get; } = [];
+
     public bool IsAttendingSelected => MyStatus == AttendanceStatus.Attending;
     public bool IsNotAttendingSelected => MyStatus == AttendanceStatus.NotAttending;
     public bool IsUndecidedSelected => MyStatus == AttendanceStatus.Undecided;
@@ -84,7 +91,12 @@ public partial class PracticeDetailViewModel(
     /// <summary>タイムスケジュールの「編集」ボタンを表示するかどうか。管理者かつ編集パネル非表示中のみ表示する。</summary>
     public bool ShowScheduleEditButton => IsAdmin && !IsScheduleEditPanelVisible;
 
+    /// <summary>演奏予定曲の「編集」ボタンを表示するかどうか。管理者かつ編集パネル非表示中のみ表示する。</summary>
+    public bool ShowPiecesEditButton => IsAdmin && !IsPiecesEditPanelVisible;
+
     partial void OnIsScheduleEditPanelVisibleChanged(bool value) => OnPropertyChanged(nameof(ShowScheduleEditButton));
+
+    partial void OnIsPiecesEditPanelVisibleChanged(bool value) => OnPropertyChanged(nameof(ShowPiecesEditButton));
 
     partial void OnMyStatusChanged(AttendanceStatus value)
     {
@@ -206,8 +218,7 @@ public partial class PracticeDetailViewModel(
                     PieceId = pieceRef.PieceId,
                     Title = pieceRef.Title,
                     Dots = dots,
-                    RecordingUrl = pieceRef.RecordingUrl,
-                    IsFeatured = pieceRef.IsFeatured
+                    Recordings = pieceRef.Recordings
                 });
             }
 
@@ -252,14 +263,11 @@ public partial class PracticeDetailViewModel(
     private void ClosePartModal() => IsPartModalVisible = false;
 
     [RelayCommand]
-    private async Task OpenRecordingAsync(SongParticipation song)
+    private async Task OpenRecordingAsync(PracticeRecording recording)
     {
-        if (!song.HasRecordingUrl)
-            return;
-
         try
         {
-            await Launcher.Default.OpenAsync(song.RecordingUrl!);
+            await Launcher.Default.OpenAsync(recording.Url);
         }
         catch (Exception ex)
         {
@@ -268,7 +276,7 @@ public partial class PracticeDetailViewModel(
     }
 
     [RelayCommand]
-    private async Task EditRecordingAsync(SongParticipation song)
+    private async Task AddRecordingAsync(SongParticipation song)
     {
         if (!IsAdmin || Practice is null)
             return;
@@ -277,18 +285,25 @@ public partial class PracticeDetailViewModel(
         if (currentPage is null)
             return;
 
-        var input = await currentPage.DisplayPromptAsync(
-            $"{song.Title} の録音リンク",
-            "OneDriveの共有リンクを入力してください。空欄で保存するとリンクを削除します。",
-            "保存", "キャンセル",
-            initialValue: song.RecordingUrl ?? "",
-            keyboard: Keyboard.Url);
+        var name = await currentPage.DisplayPromptAsync(
+            $"{song.Title} に録音を追加",
+            "録音の名前を入力してください(任意)。",
+            "次へ", "キャンセル");
 
-        if (input is null)
+        if (name is null)
             return;
 
-        var trimmed = input.Trim();
-        if (trimmed.Length > 0 && !Uri.TryCreate(trimmed, UriKind.Absolute, out _))
+        var url = await currentPage.DisplayPromptAsync(
+            $"{song.Title} に録音を追加",
+            "OneDriveの共有リンクを入力してください。",
+            "追加", "キャンセル",
+            keyboard: Keyboard.Url);
+
+        if (string.IsNullOrWhiteSpace(url))
+            return;
+
+        var trimmedUrl = url.Trim();
+        if (!Uri.TryCreate(trimmedUrl, UriKind.Absolute, out _))
         {
             ErrorMessage = "リンクの形式が正しくありません。";
             return;
@@ -296,24 +311,79 @@ public partial class PracticeDetailViewModel(
 
         try
         {
-            await practiceService.SetPieceRecordingUrlAsync(Practice.Id, song.PieceId, trimmed.Length > 0 ? trimmed : null);
+            await practiceService.AddRecordingAsync(Practice.Id, song.PieceId, name.Trim(), trimmedUrl);
             await LoadAsync();
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"録音リンクの保存に失敗しました。({ex.Message})";
+            ErrorMessage = $"録音の追加に失敗しました。({ex.Message})";
         }
     }
 
     [RelayCommand]
-    private async Task ToggleRecordingFeaturedAsync(SongParticipation song)
+    private async Task EditRecordingAsync(PracticeRecording recording)
     {
-        if (!IsAdmin || Practice is null || !song.HasRecordingUrl)
+        if (!IsAdmin || Practice is null)
+            return;
+
+        var song = SongParticipations.FirstOrDefault(s => s.Recordings.Any(r => r.Id == recording.Id));
+        if (song is null)
+            return;
+
+        var currentPage = Shell.Current?.CurrentPage;
+        if (currentPage is null)
+            return;
+
+        var name = await currentPage.DisplayPromptAsync(
+            $"{song.Title} の録音",
+            "録音の名前を入力してください(任意)。",
+            "次へ", "キャンセル",
+            initialValue: recording.Name);
+
+        if (name is null)
+            return;
+
+        var url = await currentPage.DisplayPromptAsync(
+            $"{song.Title} の録音",
+            "OneDriveの共有リンクを入力してください。空欄で保存すると録音を削除します。",
+            "保存", "キャンセル",
+            initialValue: recording.Url,
+            keyboard: Keyboard.Url);
+
+        if (url is null)
+            return;
+
+        var trimmedUrl = url.Trim();
+        if (trimmedUrl.Length > 0 && !Uri.TryCreate(trimmedUrl, UriKind.Absolute, out _))
+        {
+            ErrorMessage = "リンクの形式が正しくありません。";
+            return;
+        }
+
+        try
+        {
+            await practiceService.EditRecordingAsync(Practice.Id, song.PieceId, recording.Id, name.Trim(), trimmedUrl.Length > 0 ? trimmedUrl : null);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"録音の保存に失敗しました。({ex.Message})";
+        }
+    }
+
+    [RelayCommand]
+    private async Task ToggleRecordingFeaturedAsync(PracticeRecording recording)
+    {
+        if (!IsAdmin || Practice is null)
+            return;
+
+        var song = SongParticipations.FirstOrDefault(s => s.Recordings.Any(r => r.Id == recording.Id));
+        if (song is null)
             return;
 
         try
         {
-            await practiceService.SetPieceRecordingFeaturedAsync(Practice.Id, song.PieceId, !song.IsFeatured);
+            await practiceService.SetRecordingFeaturedAsync(Practice.Id, song.PieceId, recording.Id, !recording.IsFeatured);
             await LoadAsync();
         }
         catch (Exception ex)
@@ -406,6 +476,92 @@ public partial class PracticeDetailViewModel(
         catch (Exception ex)
         {
             ErrorMessage = $"タイムスケジュールの保存に失敗しました。({ex.Message})";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenPiecesEditPanelAsync()
+    {
+        if (!IsAdmin || Practice is null)
+            return;
+
+        try
+        {
+            var pieces = await pieceService.GetAllAsync();
+            var selectedPieceIds = Practice.Pieces.Select(p => p.PieceId).ToHashSet();
+
+            EditPieceInputs.Clear();
+            foreach (var piece in pieces)
+            {
+                EditPieceInputs.Add(new PieceSelectionInput
+                {
+                    PieceId = piece.Id,
+                    Title = piece.Title,
+                    IsSelected = selectedPieceIds.Contains(piece.Id)
+                });
+            }
+            IsPiecesEditPanelVisible = true;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"読み込みに失敗しました。({ex.Message})";
+        }
+    }
+
+    [RelayCommand]
+    private void ClosePiecesEditPanel() => IsPiecesEditPanelVisible = false;
+
+    [RelayCommand]
+    private async Task SavePiecesAsync()
+    {
+        if (!IsAdmin || Practice is null)
+            return;
+
+        try
+        {
+            var selectedPieces = EditPieceInputs
+                .Where(p => p.IsSelected)
+                .Select(p => (p.PieceId, p.Title))
+                .ToList();
+            var mergedPieces = PracticePieceMerger.MergeSelectedPieces(Practice.Pieces, selectedPieces);
+
+            await practiceService.UpdatePiecesAsync(Practice.Id, mergedPieces);
+
+            IsPiecesEditPanelVisible = false;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"演奏予定曲の保存に失敗しました。({ex.Message})";
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeletePracticeAsync()
+    {
+        if (!IsAdmin || Practice is null)
+            return;
+
+        var currentPage = Shell.Current?.CurrentPage;
+        if (currentPage is null)
+            return;
+
+        var confirmed = await currentPage.DisplayAlertAsync(
+            "練習予定を削除",
+            "この練習予定を削除します。よろしいですか？",
+            "はい", "キャンセル");
+
+        if (!confirmed)
+            return;
+
+        try
+        {
+            await practiceService.DeleteAsync(Practice.Id);
+            await Shell.Current!.GoToAsync("//schedule");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"削除に失敗しました。({ex.Message})";
         }
     }
 }

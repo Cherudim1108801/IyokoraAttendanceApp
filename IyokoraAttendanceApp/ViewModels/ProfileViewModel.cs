@@ -37,6 +37,18 @@ public partial class ProfileViewModel(MemberService memberService, PieceService 
     /// <summary>複数端末から同じアカウントを使うためのログインID。</summary>
     public string LoginId => profile.LoginId;
 
+    /// <summary>
+    /// 現在のログインIDが、姉妹アプリ移行前の旧形式(<see cref="FirebaseOptions.LoginIdPrefix"/> で始まらない)かどうか。
+    /// </summary>
+    public bool IsLegacyLoginId => !string.IsNullOrEmpty(LoginId) && !LoginId.StartsWith(FirebaseOptions.LoginIdPrefix, StringComparison.Ordinal);
+
+    /// <summary>ログインIDの再発行後に表示する、新しいログインID。再発行前は null。</summary>
+    [ObservableProperty]
+    public partial string? ReissuedLoginId { get; set; }
+
+    /// <summary>操作中の利用者が管理者かどうか。団員管理画面への導線の表示に使用する。</summary>
+    public bool IsAdmin => profile.Role == Role.Admin;
+
     partial void OnSelectedPartChanged(PartOption value) => BuildPiecePartInputs();
 
     /// <summary>曲一覧を読み込み、所属パートに応じたパート担当選択一覧を構築する。</summary>
@@ -108,6 +120,7 @@ public partial class ProfileViewModel(MemberService memberService, PieceService 
             var loginId = await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, SelectedRole.Role, pieceParts, profile.LoginId);
             profile.LoginId = loginId;
             OnPropertyChanged(nameof(LoginId));
+            OnPropertyChanged(nameof(IsLegacyLoginId));
             SavedMessage = "保存しました。";
         }
         catch (Exception ex)
@@ -118,6 +131,45 @@ public partial class ProfileViewModel(MemberService memberService, PieceService 
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task ReissueLoginIdAsync()
+    {
+        var currentPage = Shell.Current?.CurrentPage;
+        if (currentPage is null)
+            return;
+
+        var confirmed = await currentPage.DisplayAlertAsync(
+            "ログインIDを更新",
+            "新しいログインIDを発行します。今までのログインIDではログインできなくなります。よろしいですか？",
+            "はい", "キャンセル");
+
+        if (!confirmed)
+            return;
+
+        ErrorMessage = null;
+        try
+        {
+            var newLoginId = await memberService.ReissueLoginIdAsync(profile.MemberId);
+            profile.LoginId = newLoginId;
+            OnPropertyChanged(nameof(LoginId));
+            OnPropertyChanged(nameof(IsLegacyLoginId));
+            ReissuedLoginId = newLoginId;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"更新に失敗しました。({ex.Message})";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenMembersAsync()
+    {
+        if (!IsAdmin)
+            return;
+
+        await Shell.Current!.GoToAsync("members");
     }
 
     [RelayCommand]

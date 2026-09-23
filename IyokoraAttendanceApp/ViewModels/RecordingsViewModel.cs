@@ -14,8 +14,8 @@ public partial class RecordingsViewModel(PracticeService practiceService) : Base
     /// <summary>強調表示（ピン留め）された録音の一覧。</summary>
     public ObservableCollection<RecordingItem> FeaturedRecordings { get; } = [];
 
-    /// <summary>録音登録済みの曲すべての一覧（練習日の新しい順）。</summary>
-    public ObservableCollection<RecordingItem> AllRecordings { get; } = [];
+    /// <summary>録音登録済みの練習を、練習日ごとにグループ化した一覧（練習日の新しい順。直近日付のみ初期展開）。</summary>
+    public ObservableCollection<RecordingDateGroup> AllRecordingGroups { get; } = [];
 
     /// <summary>強調表示された録音が1件以上あるかどうか。</summary>
     [ObservableProperty]
@@ -39,33 +39,51 @@ public partial class RecordingsViewModel(PracticeService practiceService) : Base
         try
         {
             var practices = await practiceService.GetAllAsync();
+            var orderedPractices = practices.OrderByDescending(p => p.Date).ToList();
 
-            var items = practices
-                .OrderByDescending(p => p.Date)
-                .SelectMany(p => p.Pieces
-                    .Where(piece => !string.IsNullOrEmpty(piece.RecordingUrl))
-                    .Select(piece => new RecordingItem
+            var itemsByPracticeId = orderedPractices.ToDictionary(
+                p => p.Id,
+                p => p.Pieces
+                    .SelectMany(piece => piece.Recordings.Select(recording => new RecordingItem
                     {
                         PracticeId = p.Id,
                         PieceId = piece.PieceId,
+                        RecordingId = recording.Id,
                         Title = piece.Title,
+                        RecordingName = recording.Name,
                         PracticeLabel = string.IsNullOrEmpty(p.Title)
                             ? $"{p.Date:yyyy年M月d日}の練習"
                             : $"{p.Date:yyyy年M月d日} {p.Title}",
-                        RecordingUrl = piece.RecordingUrl!,
-                        IsFeatured = piece.IsFeatured
+                        RecordingUrl = recording.Url,
+                        IsFeatured = recording.IsFeatured
                     }))
-                .ToList();
+                    .ToList());
 
             FeaturedRecordings.Clear();
-            foreach (var item in items.Where(i => i.IsFeatured))
+            foreach (var item in itemsByPracticeId.Values.SelectMany(i => i).Where(i => i.IsFeatured))
                 FeaturedRecordings.Add(item);
             HasFeaturedRecordings = FeaturedRecordings.Count > 0;
 
-            AllRecordings.Clear();
-            foreach (var item in items)
-                AllRecordings.Add(item);
-            HasNoRecordings = AllRecordings.Count == 0;
+            AllRecordingGroups.Clear();
+            var isFirstGroup = true;
+            foreach (var practice in orderedPractices)
+            {
+                var practiceItems = itemsByPracticeId[practice.Id];
+                if (practiceItems.Count == 0)
+                    continue;
+
+                AllRecordingGroups.Add(new RecordingDateGroup
+                {
+                    Date = practice.Date.Date,
+                    Label = string.IsNullOrEmpty(practice.Title)
+                        ? $"{practice.Date:yyyy年M月d日}の練習"
+                        : $"{practice.Date:yyyy年M月d日} {practice.Title}",
+                    Items = practiceItems,
+                    IsExpanded = isFirstGroup
+                });
+                isFirstGroup = false;
+            }
+            HasNoRecordings = AllRecordingGroups.Count == 0;
         }
         catch (Exception ex)
         {
@@ -77,6 +95,9 @@ public partial class RecordingsViewModel(PracticeService practiceService) : Base
             _isLoading = false;
         }
     }
+
+    [RelayCommand]
+    private void ToggleGroup(RecordingDateGroup group) => group.IsExpanded = !group.IsExpanded;
 
     [RelayCommand]
     private async Task OpenRecordingAsync(RecordingItem item)

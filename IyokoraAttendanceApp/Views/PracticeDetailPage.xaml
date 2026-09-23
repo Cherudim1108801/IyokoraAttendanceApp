@@ -115,6 +115,48 @@
                     </VerticalStackLayout>
                 </VerticalStackLayout>
 
+                <!-- 演奏予定曲 -->
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="演奏予定曲" FontSize="16" FontAttributes="Bold" />
+                        <Button Grid.Column="1" Text="編集" FontSize="12"
+                                BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
+                                IsVisible="{Binding ShowPiecesEditButton}"
+                                Command="{Binding OpenPiecesEditPanelCommand}" />
+                    </Grid>
+
+                    <Border IsVisible="{Binding IsPiecesEditPanelVisible}" Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
+                           BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="登録されている曲はありません。「曲」タブから登録できます。" FontSize="12" TextColor="{StaticResource Gray500}"
+                                   IsVisible="{Binding EditPieceInputs.Count, Converter={StaticResource IntToBoolConverter}, ConverterParameter=Invert}" />
+
+                            <VerticalStackLayout Spacing="0" BindableLayout.ItemsSource="{Binding EditPieceInputs}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PieceSelectionInput">
+                                        <Grid ColumnDefinitions="Auto,*" Padding="0,4" ColumnSpacing="8">
+                                            <CheckBox IsChecked="{Binding IsSelected}" />
+                                            <Label Grid.Column="1" Text="{Binding Title}" VerticalOptions="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,4,0,0">
+                                <Button Text="保存" Command="{Binding SavePiecesCommand}" />
+                                <Button Grid.Column="1" Text="キャンセル" Command="{Binding ClosePiecesEditPanelCommand}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="4" IsVisible="{Binding IsPiecesEditPanelVisible, Converter={StaticResource InvertedBoolConverter}}">
+                        <Label Text="{Binding Practice.PiecesSummary}" FontSize="14"
+                               IsVisible="{Binding Practice.PiecesSummary, Converter={StaticResource StringToBoolConverter}}" />
+                        <Label Text="演奏予定曲は登録されていません。" FontSize="13" TextColor="{StaticResource Gray500}"
+                               IsVisible="{Binding Practice.PiecesSummary, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Invert}" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
                 <!-- 自分の出欠 -->
                 <VerticalStackLayout Spacing="10">
                     <Label Text="あなたの出欠" FontSize="16" FontAttributes="Bold" />
@@ -209,39 +251,53 @@
                                         </BindableLayout.ItemTemplate>
                                     </FlexLayout>
 
-                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
-                                        <Label Grid.Column="0" Text="★" TextColor="#F5A623" FontSize="14"
-                                               VerticalOptions="Center"
-                                               IsVisible="{Binding IsFeatured}" />
-                                        <Label Grid.Column="1" Text="🎵 録音を聴く" FontSize="13" TextColor="{StaticResource Primary}"
-                                               IsVisible="{Binding HasRecordingUrl}">
-                                            <Label.GestureRecognizers>
-                                                <TapGestureRecognizer
-                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenRecordingCommand}"
-                                                    CommandParameter="{Binding .}" />
-                                            </Label.GestureRecognizers>
-                                        </Label>
-                                        <Label Grid.Column="1" Text="録音リンク未登録" FontSize="12" TextColor="{StaticResource Gray500}"
-                                               IsVisible="{Binding HasRecordingUrl, Converter={StaticResource InvertedBoolConverter}}" />
-                                        <HorizontalStackLayout Grid.Column="2"
-                                                IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}">
-                                            <Button Text="★ 注目に設定" FontSize="12"
-                                                    BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
-                                                    IsVisible="{Binding CanToggleFeaturedOn}"
-                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleRecordingFeaturedCommand}"
-                                                    CommandParameter="{Binding .}" />
-                                            <Button Text="★ 注目解除" FontSize="12"
-                                                    BackgroundColor="Transparent" TextColor="#F5A623"
-                                                    IsVisible="{Binding CanToggleFeaturedOff}"
-                                                    Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleRecordingFeaturedCommand}"
-                                                    CommandParameter="{Binding .}" />
-                                        </HorizontalStackLayout>
-                                        <Button Grid.Column="3" Text="編集" FontSize="12"
-                                                BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
-                                                IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
-                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditRecordingCommand}"
-                                                CommandParameter="{Binding .}" />
-                                    </Grid>
+                                    <Label Text="録音リンク未登録" FontSize="12" TextColor="{StaticResource Gray500}"
+                                           IsVisible="{Binding HasRecordings, Converter={StaticResource InvertedBoolConverter}}" />
+
+                                    <VerticalStackLayout Spacing="4" BindableLayout.ItemsSource="{Binding Recordings}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="models:PracticeRecording">
+                                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="6">
+                                                    <Label Grid.Column="0" Text="★" TextColor="#F5A623" FontSize="14"
+                                                           VerticalOptions="Center"
+                                                           IsVisible="{Binding IsFeatured}" />
+                                                    <Label Grid.Column="1" Text="{Binding DisplayName, StringFormat='🎵 {0}'}" FontSize="13"
+                                                           TextColor="{StaticResource Primary}">
+                                                        <Label.GestureRecognizers>
+                                                            <TapGestureRecognizer
+                                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenRecordingCommand}"
+                                                                CommandParameter="{Binding .}" />
+                                                        </Label.GestureRecognizers>
+                                                    </Label>
+                                                    <HorizontalStackLayout Grid.Column="2"
+                                                            IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}">
+                                                        <Button Text="★ 注目に設定" FontSize="12"
+                                                                BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
+                                                                IsVisible="{Binding IsFeatured, Converter={StaticResource InvertedBoolConverter}}"
+                                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleRecordingFeaturedCommand}"
+                                                                CommandParameter="{Binding .}" />
+                                                        <Button Text="★ 注目解除" FontSize="12"
+                                                                BackgroundColor="Transparent" TextColor="#F5A623"
+                                                                IsVisible="{Binding IsFeatured}"
+                                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleRecordingFeaturedCommand}"
+                                                                CommandParameter="{Binding .}" />
+                                                    </HorizontalStackLayout>
+                                                    <Button Grid.Column="3" Text="編集" FontSize="12"
+                                                            BackgroundColor="Transparent" TextColor="{StaticResource Gray500}"
+                                                            IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
+                                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditRecordingCommand}"
+                                                            CommandParameter="{Binding .}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+
+                                    <Button Text="＋ 録音を追加" FontSize="12"
+                                            BackgroundColor="Transparent" TextColor="{StaticResource Primary}"
+                                            HorizontalOptions="Start"
+                                            IsVisible="{Binding Source={x:Reference Root}, Path=BindingContext.IsAdmin}"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.AddRecordingCommand}"
+                                            CommandParameter="{Binding .}" />
                                 </VerticalStackLayout>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
@@ -274,6 +330,12 @@
                                 Command="{Binding ToggleKeyPickedUpCommand}" />
                     </Grid>
                 </VerticalStackLayout>
+
+                <!-- 練習予定の削除（管理者のみ） -->
+                <Button Text="この練習予定を削除" FontSize="13" Margin="0,10,0,0"
+                        BackgroundColor="Transparent" TextColor="{StaticResource Magenta}" BorderColor="{StaticResource Magenta}" BorderWidth="1"
+                        IsVisible="{Binding IsAdmin}"
+                        Command="{Binding DeletePracticeCommand}" />
 
             </VerticalStackLayout>
         </ScrollView>
