@@ -13,6 +13,8 @@
 
         <VerticalStackLayout Grid.Row="0" Padding="16,12" Spacing="10">
             <Button Text="＋ 練習予定を追加" Command="{Binding ToggleAddPanelCommand}" IsVisible="{Binding IsAdmin}" />
+            <Button Text="日程投票" Command="{Binding OpenSchedulePollCommand}"
+                    BackgroundColor="Transparent" TextColor="{StaticResource Primary}" BorderColor="{StaticResource Primary}" BorderWidth="1" />
 
             <Border IsVisible="{Binding IsAddPanelVisible}" Padding="14" Stroke="Transparent" StrokeShape="RoundRectangle 12"
                    BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray600}}">

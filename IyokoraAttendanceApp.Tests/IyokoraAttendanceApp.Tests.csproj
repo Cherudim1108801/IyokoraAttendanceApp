@@ -57,6 +57,9 @@
     <Compile Include="..\IyokoraAttendanceApp\Models\PracticeTimelineItem.cs" Link="ProductionCode\Models\PracticeTimelineItem.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Models\TimelineItemInput.cs" Link="ProductionCode\Models\TimelineItemInput.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Models\Practice.cs" Link="ProductionCode\Models\Practice.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\TimeOfDay.cs" Link="ProductionCode\Models\TimeOfDay.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\ScheduleCandidate.cs" Link="ProductionCode\Models\ScheduleCandidate.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\ScheduleVote.cs" Link="ProductionCode\Models\ScheduleVote.cs" />
   </ItemGroup>
 
 </Project>

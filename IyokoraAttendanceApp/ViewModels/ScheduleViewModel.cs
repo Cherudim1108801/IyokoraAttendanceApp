@@ -169,4 +169,11 @@ public partial class ScheduleViewModel(PracticeService practiceService, PieceSer
         if (Shell.Current is not null)
             await Shell.Current.GoToAsync($"practiceDetail?practiceId={practice.Id}");
     }
+
+    [RelayCommand]
+    private static async Task OpenSchedulePollAsync()
+    {
+        if (Shell.Current is not null)
+            await Shell.Current.GoToAsync("schedulePoll");
+    }
 }
