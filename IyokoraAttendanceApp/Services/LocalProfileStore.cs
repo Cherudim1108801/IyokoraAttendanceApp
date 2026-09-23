@@ -13,12 +13,14 @@ public class LocalProfileStore
     private const string KeyPart = "profile.part";
     private const string KeyRole = "profile.role";
     private const string KeyPieceParts = "profile.pieceParts";
+    private const string KeyLoginId = "profile.loginId";
 
     /// <summary>名前が登録済みかどうか（オンボーディング完了の判定に使用）。</summary>
     public bool IsRegistered => !string.IsNullOrEmpty(MemberId) && !string.IsNullOrEmpty(Name);
 
     /// <summary>
     /// この端末に割り当てられた MemberId。未発行の場合は初回アクセス時に自動生成して永続化する。
+    /// ログインID でログインした場合は、その持ち主の MemberId に上書きされる。
     /// </summary>
     public string MemberId
     {
@@ -32,6 +34,17 @@ public class LocalProfileStore
             }
             return id;
         }
+        set => Preferences.Default.Set(KeyMemberId, value);
+    }
+
+    /// <summary>
+    /// 複数端末から同じアカウントを使うためのログインID。オンボーディング完了時に発行され、
+    /// 別端末では <see cref="MemberId"/> 等と併せてこの値をログイン時に受け取って保存する。
+    /// </summary>
+    public string LoginId
+    {
+        get => Preferences.Default.Get(KeyLoginId, string.Empty);
+        set => Preferences.Default.Set(KeyLoginId, value);
     }
 
     /// <summary>表示名。</summary>
@@ -80,5 +93,6 @@ public class LocalProfileStore
         Preferences.Default.Remove(KeyPart);
         Preferences.Default.Remove(KeyRole);
         Preferences.Default.Remove(KeyPieceParts);
+        Preferences.Default.Remove(KeyLoginId);
     }
 }

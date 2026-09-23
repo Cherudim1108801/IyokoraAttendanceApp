@@ -42,6 +42,7 @@
     <Compile Include="..\IyokoraAttendanceApp\Services\PieceVisibility.cs" Link="ProductionCode\Services\PieceVisibility.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Services\KeyPickupRecorder.cs" Link="ProductionCode\Services\KeyPickupRecorder.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Services\PracticeScheduleValidator.cs" Link="ProductionCode\Services\PracticeScheduleValidator.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Services\LoginIdGenerator.cs" Link="ProductionCode\Services\LoginIdGenerator.cs" />
 
     <!-- Models: UI非依存のロジック（表示名・色・ID生成・サマリ文字列など） -->
     <Compile Include="..\IyokoraAttendanceApp\Models\Role.cs" Link="ProductionCode\Models\Role.cs" />

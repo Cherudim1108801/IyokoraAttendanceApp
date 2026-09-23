@@ -20,6 +20,10 @@ public partial class OnboardingViewModel(MemberService memberService, LocalProfi
         ? PartOption.All.First(p => p.Part == profile.Part)
         : PartOption.All[0];
 
+    /// <summary>登録完了後に発行されたログインID。未登録・登録前は null。</summary>
+    [ObservableProperty]
+    public partial string? AssignedLoginId { get; set; }
+
     [RelayCommand]
     private async Task SaveAsync()
     {
@@ -36,10 +40,9 @@ public partial class OnboardingViewModel(MemberService memberService, LocalProfi
         {
             profile.Name = trimmedName;
             profile.Part = SelectedPart.Part;
-            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, profile.Role, []);
-
-            if (Shell.Current is not null)
-                await Shell.Current.GoToAsync("//home");
+            var loginId = await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, profile.Role, [], profile.LoginId);
+            profile.LoginId = loginId;
+            AssignedLoginId = loginId;
         }
         catch (Exception ex)
         {
@@ -49,5 +52,19 @@ public partial class OnboardingViewModel(MemberService memberService, LocalProfi
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private static async Task FinishAsync()
+    {
+        if (Shell.Current is not null)
+            await Shell.Current.GoToAsync("//home");
+    }
+
+    [RelayCommand]
+    private static async Task GoToLoginAsync()
+    {
+        if (Shell.Current is not null)
+            await Shell.Current.GoToAsync("login");
     }
 }

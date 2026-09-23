@@ -34,6 +34,9 @@ public partial class ProfileViewModel(MemberService memberService, PieceService 
     [ObservableProperty]
     public partial string? SavedMessage { get; set; }
 
+    /// <summary>複数端末から同じアカウントを使うためのログインID。</summary>
+    public string LoginId => profile.LoginId;
+
     partial void OnSelectedPartChanged(PartOption value) => BuildPiecePartInputs();
 
     /// <summary>曲一覧を読み込み、所属パートに応じたパート担当選択一覧を構築する。</summary>
@@ -102,7 +105,9 @@ public partial class ProfileViewModel(MemberService memberService, PieceService 
             profile.Part = SelectedPart.Part;
             profile.Role = SelectedRole.Role;
             profile.PieceParts = pieceParts;
-            await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, SelectedRole.Role, pieceParts);
+            var loginId = await memberService.SaveAsync(profile.MemberId, trimmedName, SelectedPart.Part, SelectedRole.Role, pieceParts, profile.LoginId);
+            profile.LoginId = loginId;
+            OnPropertyChanged(nameof(LoginId));
             SavedMessage = "保存しました。";
         }
         catch (Exception ex)

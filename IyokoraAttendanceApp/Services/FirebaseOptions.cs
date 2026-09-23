@@ -29,6 +29,13 @@ public static class FirebaseOptions
     /// </summary>
     public const string GroupId = "default";
 
+    /// <summary>
+    /// ログインID（<see cref="LoginIdGenerator"/> 参照）の先頭に付与する、団体ごとのアルファベット文字列。
+    /// <see cref="GroupId"/> と同様、団体ごとに異なる値をビルド時に設定することを想定している。
+    /// 姉妹アプリである Blazor WebAssembly 版と同じ Firestore データを扱うため、同じ値を使用する。
+    /// </summary>
+    public const string LoginIdPrefix = "IC";
+
     public static string FirestoreBaseUrl =>
         $"https://firestore.googleapis.com/v1/projects/{ProjectId}/databases/(default)/documents";
 }

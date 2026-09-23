@@ -13,8 +13,13 @@ public class InvertedBoolConverter : IValueConverter
 
 public class StringToBoolConverter : IValueConverter
 {
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        !string.IsNullOrEmpty(value as string);
+    /// <summary>ConverterParameter に "Invert" を指定すると、文字列が空のときに true を返す（結果を反転する）。</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var hasValue = !string.IsNullOrEmpty(value as string);
+        var invert = string.Equals(parameter as string, "Invert", StringComparison.OrdinalIgnoreCase);
+        return invert ? !hasValue : hasValue;
+    }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

@@ -33,6 +33,7 @@ namespace IyokoraAttendanceApp
 
             // ViewModels
             builder.Services.AddTransient<OnboardingViewModel>();
+            builder.Services.AddTransient<LoginViewModel>();
             builder.Services.AddTransient<DashboardViewModel>();
             builder.Services.AddTransient<ScheduleViewModel>();
             builder.Services.AddTransient<PracticeHistoryViewModel>();
@@ -43,6 +44,7 @@ namespace IyokoraAttendanceApp
 
             // Views
             builder.Services.AddTransient<OnboardingPage>();
+            builder.Services.AddTransient<LoginPage>();
             builder.Services.AddTransient<DashboardPage>();
             builder.Services.AddTransient<SchedulePage>();
             builder.Services.AddTransient<PracticeHistoryPage>();
