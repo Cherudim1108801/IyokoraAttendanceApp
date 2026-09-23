@@ -30,6 +30,12 @@ public partial class PiecesViewModel(PieceService pieceService, LocalProfileStor
     [ObservableProperty]
     public partial string NewTitle { get; set; } = string.Empty;
 
+    /// <summary>取り組みが終わり非表示にされた曲も一覧に含めるかどうか。</summary>
+    [ObservableProperty]
+    public partial bool ShowArchived { get; set; }
+
+    partial void OnShowArchivedChanged(bool value) => _ = LoadAsync();
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -43,7 +49,7 @@ public partial class PiecesViewModel(PieceService pieceService, LocalProfileStor
         ErrorMessage = null;
         try
         {
-            var pieces = await pieceService.GetAllAsync();
+            var pieces = await pieceService.GetAllAsync(includeArchived: ShowArchived);
             Pieces.Clear();
             foreach (var piece in pieces)
                 Pieces.Add(piece);
@@ -114,6 +120,23 @@ public partial class PiecesViewModel(PieceService pieceService, LocalProfileStor
         catch (Exception ex)
         {
             ErrorMessage = $"削除に失敗しました。({ex.Message})";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SetArchivedAsync(Piece piece)
+    {
+        if (!IsAdmin)
+            return;
+
+        try
+        {
+            await pieceService.SetArchivedAsync(piece.Id, !piece.IsArchived);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"更新に失敗しました。({ex.Message})";
         }
     }
 }

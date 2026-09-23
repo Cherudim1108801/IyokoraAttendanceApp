@@ -61,4 +61,12 @@ public class PieceTests
 
         Assert.Equal("ソプラノ、ベース", piece.PartsSummary);
     }
+
+    [Fact]
+    public void IsArchived_Default_IsFalse()
+    {
+        var piece = new Piece { Id = "p1", Title = "曲A" };
+
+        Assert.False(piece.IsArchived);
+    }
 }

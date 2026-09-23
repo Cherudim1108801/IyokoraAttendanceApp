@@ -174,8 +174,12 @@
                            IsVisible="{Binding Practice.RequiresKeyPickup, Converter={StaticResource InvertedBoolConverter}}" />
 
                     <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding Practice.RequiresKeyPickup}">
-                        <Label Grid.Column="0" Text="受け取り済み" TextColor="#3EC1A4" FontAttributes="Bold"
-                               VerticalOptions="Center" IsVisible="{Binding Practice.KeyPickedUp}" />
+                        <HorizontalStackLayout Grid.Column="0" Spacing="4" IsVisible="{Binding Practice.KeyPickedUp}">
+                            <Label Text="受け取り済み" TextColor="#3EC1A4" FontAttributes="Bold" VerticalOptions="Center" />
+                            <Label Text="{Binding Practice.KeyPickedUpByName, StringFormat='（{0}）'}" TextColor="#3EC1A4"
+                                   VerticalOptions="Center"
+                                   IsVisible="{Binding Practice.KeyPickedUpByName, Converter={StaticResource StringToBoolConverter}}" />
+                        </HorizontalStackLayout>
                         <Label Grid.Column="0" Text="未受け取り" TextColor="{StaticResource Magenta}" FontAttributes="Bold"
                                VerticalOptions="Center" IsVisible="{Binding Practice.KeyPickedUp, Converter={StaticResource InvertedBoolConverter}}" />
                         <Button Grid.Column="1" Text="未受け取りに戻す" FontSize="12"

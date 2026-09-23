@@ -39,6 +39,8 @@
     <!-- Services: MAUI に依存しない純粋なロジック -->
     <Compile Include="..\IyokoraAttendanceApp\Services\NameCipher.cs" Link="ProductionCode\Services\NameCipher.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Services\FirestoreDocument.cs" Link="ProductionCode\Services\FirestoreDocument.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Services\PieceVisibility.cs" Link="ProductionCode\Services\PieceVisibility.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Services\KeyPickupRecorder.cs" Link="ProductionCode\Services\KeyPickupRecorder.cs" />
 
     <!-- Models: UI非依存のロジック（表示名・色・ID生成・サマリ文字列など） -->
     <Compile Include="..\IyokoraAttendanceApp\Models\Role.cs" Link="ProductionCode\Models\Role.cs" />

@@ -310,7 +310,7 @@ public partial class PracticeDetailViewModel(
 
         try
         {
-            await practiceService.SetKeyPickedUpAsync(Practice.Id, !Practice.KeyPickedUp);
+            await practiceService.SetKeyPickedUpAsync(Practice.Id, !Practice.KeyPickedUp, profile.Name);
             await LoadAsync();
         }
         catch (Exception ex)
