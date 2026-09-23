@@ -71,6 +71,31 @@ public class MemberService(FirestoreClient client, ILogger<MemberService> logger
         return members.FirstOrDefault(m => m.LoginId == normalized);
     }
 
+    /// <summary>指定IDのメンバーを削除する。</summary>
+    /// <param name="memberId">メンバーID。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    public Task DeleteAsync(string memberId, CancellationToken ct = default) =>
+        client.DeleteDocumentAsync(Collection, memberId, ct);
+
+    /// <summary>
+    /// 指定メンバーのログインIDを新規発行し直す。姉妹アプリ移行前の旧形式ログインID
+    /// （<see cref="FirebaseOptions.LoginIdPrefix"/> で始まらないもの）からの切り替え用。
+    /// </summary>
+    /// <param name="memberId">メンバーID。</param>
+    /// <param name="ct">キャンセルトークン。</param>
+    /// <returns>新たに発行されたログインID。</returns>
+    public async Task<string> ReissueLoginIdAsync(string memberId, CancellationToken ct = default)
+    {
+        var newLoginId = await GenerateUniqueLoginIdAsync(ct);
+        var fields = new Dictionary<string, object?>
+        {
+            ["loginId"] = newLoginId,
+            ["updatedAt"] = DateTime.UtcNow
+        };
+        await client.UpsertDocumentAsync(Collection, memberId, fields, ct);
+        return newLoginId;
+    }
+
     private async Task<string> GenerateUniqueLoginIdAsync(CancellationToken ct)
     {
         var docs = await client.ListDocumentsAsync(Collection, ct);

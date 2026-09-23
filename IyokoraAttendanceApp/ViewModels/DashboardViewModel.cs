@@ -45,12 +45,28 @@ public partial class DashboardViewModel(MemberService memberService, PracticeSer
     [ObservableProperty]
     public partial bool IsPartModalVisible { get; set; }
 
+    /// <summary>次回練習のタイムスケジュールモーダルを表示中かどうか。</summary>
+    [ObservableProperty]
+    public partial bool IsTimelineModalVisible { get; set; }
+
     public string MyName => profile.Name;
 
     public string ResponseSummaryLabel => $"回答済み: {TotalResponded} 人 (登録メンバー全 {TotalMembers} 人)";
 
+    /// <summary>次回練習のタイムスケジュールを、開始時刻順に並べた一覧。</summary>
+    public IEnumerable<PracticeTimelineItem> NextPracticeTimelineItems => NextPractice?.TimelineItems.OrderBy(i => i.StartTime) ?? Enumerable.Empty<PracticeTimelineItem>();
+
+    /// <summary>次回練習にタイムスケジュールが1件以上登録されているかどうか。</summary>
+    public bool HasNextPracticeTimelineItems => NextPractice?.TimelineItems.Count > 0;
+
     partial void OnTotalRespondedChanged(int value) => OnPropertyChanged(nameof(ResponseSummaryLabel));
     partial void OnTotalMembersChanged(int value) => OnPropertyChanged(nameof(ResponseSummaryLabel));
+
+    partial void OnNextPracticeChanged(Practice? value)
+    {
+        OnPropertyChanged(nameof(NextPracticeTimelineItems));
+        OnPropertyChanged(nameof(HasNextPracticeTimelineItems));
+    }
 
     public bool IsAttendingSelected => MyStatus == AttendanceStatus.Attending;
     public bool IsNotAttendingSelected => MyStatus == AttendanceStatus.NotAttending;
@@ -177,6 +193,18 @@ public partial class DashboardViewModel(MemberService memberService, PracticeSer
 
     [RelayCommand]
     private void ClosePartModal() => IsPartModalVisible = false;
+
+    [RelayCommand]
+    private void ShowTimelineModal()
+    {
+        if (NextPractice is null)
+            return;
+
+        IsTimelineModalVisible = true;
+    }
+
+    [RelayCommand]
+    private void CloseTimelineModal() => IsTimelineModalVisible = false;
 
     public void RefreshProfileDisplay() => OnPropertyChanged(nameof(MyName));
 }

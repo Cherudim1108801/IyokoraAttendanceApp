@@ -43,6 +43,8 @@
     <Compile Include="..\IyokoraAttendanceApp\Services\KeyPickupRecorder.cs" Link="ProductionCode\Services\KeyPickupRecorder.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Services\PracticeScheduleValidator.cs" Link="ProductionCode\Services\PracticeScheduleValidator.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Services\LoginIdGenerator.cs" Link="ProductionCode\Services\LoginIdGenerator.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Services\PracticeRecordingMapper.cs" Link="ProductionCode\Services\PracticeRecordingMapper.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Services\PracticePieceMerger.cs" Link="ProductionCode\Services\PracticePieceMerger.cs" />
 
     <!-- Models: UI非依存のロジック（表示名・色・ID生成・サマリ文字列など） -->
     <Compile Include="..\IyokoraAttendanceApp\Models\Role.cs" Link="ProductionCode\Models\Role.cs" />
@@ -54,6 +56,7 @@
     <Compile Include="..\IyokoraAttendanceApp\Models\PiecePartAssignment.cs" Link="ProductionCode\Models\PiecePartAssignment.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Models\Piece.cs" Link="ProductionCode\Models\Piece.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Models\PracticePieceRef.cs" Link="ProductionCode\Models\PracticePieceRef.cs" />
+    <Compile Include="..\IyokoraAttendanceApp\Models\PracticeRecording.cs" Link="ProductionCode\Models\PracticeRecording.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Models\PracticeTimelineItem.cs" Link="ProductionCode\Models\PracticeTimelineItem.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Models\TimelineItemInput.cs" Link="ProductionCode\Models\TimelineItemInput.cs" />
     <Compile Include="..\IyokoraAttendanceApp\Models\Practice.cs" Link="ProductionCode\Models\Practice.cs" />
